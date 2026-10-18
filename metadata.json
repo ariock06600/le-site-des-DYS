@@ -1,0 +1,8 @@
+{
+  "name": "Remix SyllaboDys — Atelier de Lecture Syllabique 1er remix",
+  "description": "Outil d\u0027accessibilité numérique pour enseignants, orthophonistes et parents permettant de segmenter et colorer les syllabes pour faciliter la lecture des élèves dyslexiques.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
