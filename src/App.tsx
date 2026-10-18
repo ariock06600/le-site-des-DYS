@@ -29,7 +29,7 @@ declare global {
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState<SuperPageId>('accueil');
-  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  const [theme, setTheme] = useState<'light' | 'dark'>('dark');
   const [activeSection, setActiveSection] = useState<'atelier' | 'modeles' | 'guide'>('atelier');
 
   // Sync hash routing
@@ -139,7 +139,7 @@ export default function App() {
   };
 
   const handleResetAll = () => {
-    setTheme('light');
+    setTheme('dark');
     setFontFamily('opendyslexic');
     setFontSize(24);
     setLineHeight(2.0);
@@ -308,16 +308,27 @@ export default function App() {
   const isDark = theme === 'dark';
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#f7f9fc]">
+    <div
+      className={`min-h-screen flex flex-col transition-colors ${
+        isDark ? 'bg-slate-950 text-slate-100' : 'bg-[#f7f9fc] text-[#111111]'
+      }`}
+    >
       {/* Super Cerveaux Primary Accessible Header */}
-      <SuperCerveauxHeader currentPage={currentPage} onNavigate={handleNavigate} />
+      <SuperCerveauxHeader
+        currentPage={currentPage}
+        onNavigate={handleNavigate}
+        theme={theme}
+        onToggleTheme={handleToggleTheme}
+      />
 
       {/* Landing Page (Accueil) */}
-      {currentPage === 'accueil' && <LandingPage onNavigate={handleNavigate} />}
+      {currentPage === 'accueil' && (
+        <LandingPage onNavigate={handleNavigate} theme={theme} />
+      )}
 
       {/* Thematic Guides for DYS & Allies */}
       {currentPage !== 'accueil' && currentPage !== 'syllabodys' && (
-        <ThematicPage pageId={currentPage} onNavigate={handleNavigate} />
+        <ThematicPage pageId={currentPage} onNavigate={handleNavigate} theme={theme} />
       )}
 
       {/* SyllaboDys Subpage Workshop */}

@@ -5,7 +5,6 @@ import {
   Sparkles,
   CheckCircle2,
   Lightbulb,
-  Heart,
   Zap,
   BookOpen,
   HelpCircle,
@@ -14,6 +13,7 @@ import {
 interface ThematicPageProps {
   pageId: SuperPageId;
   onNavigate: (page: SuperPageId) => void;
+  theme: 'light' | 'dark';
 }
 
 interface ThematicContent {
@@ -279,20 +279,37 @@ const THEMATIC_DATA: Record<Exclude<SuperPageId, 'accueil' | 'syllabodys'>, Them
   },
 };
 
-export const ThematicPage: React.FC<ThematicPageProps> = ({ pageId, onNavigate }) => {
+export const ThematicPage: React.FC<ThematicPageProps> = ({ pageId, onNavigate, theme }) => {
   if (pageId === 'accueil' || pageId === 'syllabodys') return null;
 
+  const isDark = theme === 'dark';
   const data = THEMATIC_DATA[pageId];
 
   return (
-    <div className="bg-[#f7f9fc] text-[#111111] font-comicneue text-lg sm:text-xl leading-relaxed py-6 sm:py-8 px-4">
-      <main className="max-w-[920px] mx-auto bg-white border-2 border-[#222222] rounded-xl shadow-md p-5 sm:p-8 space-y-8">
+    <div
+      className={`font-comicneue text-lg sm:text-xl leading-relaxed py-6 sm:py-8 px-4 transition-colors min-h-screen ${
+        isDark ? 'bg-slate-950 text-slate-100' : 'bg-[#f7f9fc] text-[#111111]'
+      }`}
+    >
+      <main
+        className={`max-w-[920px] mx-auto rounded-xl p-5 sm:p-8 space-y-8 transition-colors ${
+          isDark
+            ? 'bg-slate-900 border-2 border-slate-700 shadow-2xl'
+            : 'bg-white border-2 border-[#222222] shadow-md'
+        }`}
+      >
         {/* Top Navigation button back to Home */}
-        <div className="flex items-center justify-between border-b-2 border-slate-200 pb-4">
+        <div
+          className={`flex items-center justify-between border-b-2 pb-4 ${
+            isDark ? 'border-slate-800' : 'border-slate-200'
+          }`}
+        >
           <button
             type="button"
             onClick={() => onNavigate('accueil')}
-            className="inline-flex items-center gap-2 text-sm sm:text-base font-bold text-[#005a9c] hover:underline cursor-pointer"
+            className={`inline-flex items-center gap-2 text-sm sm:text-base font-bold hover:underline cursor-pointer ${
+              isDark ? 'text-sky-400 hover:text-sky-300' : 'text-[#005a9c]'
+            }`}
           >
             <ArrowLeft className="w-4 h-4" />
             <span>Retour à l'accueil</span>
@@ -301,7 +318,11 @@ export const ThematicPage: React.FC<ThematicPageProps> = ({ pageId, onNavigate }
           <button
             type="button"
             onClick={() => onNavigate('syllabodys')}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-bold bg-[#0284c7] hover:bg-[#0369a1] text-white shadow-xs cursor-pointer"
+            className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-bold shadow-xs cursor-pointer transition-colors ${
+              isDark
+                ? 'bg-sky-500 hover:bg-sky-400 text-slate-950 font-black'
+                : 'bg-[#0284c7] hover:bg-[#0369a1] text-white'
+            }`}
           >
             <Sparkles className="w-3.5 h-3.5" />
             <span>Atelier SyllaboDys</span>
@@ -310,42 +331,86 @@ export const ThematicPage: React.FC<ThematicPageProps> = ({ pageId, onNavigate }
 
         {/* Page Header */}
         <div>
-          <h1 className="text-2xl sm:text-4xl font-extrabold text-[#005a9c] m-0 tracking-tight leading-tight">
+          <h1
+            className={`text-2xl sm:text-4xl font-extrabold m-0 tracking-tight leading-tight ${
+              isDark ? 'text-sky-400' : 'text-[#005a9c]'
+            }`}
+          >
             {data.title}
           </h1>
-          <p className="text-base sm:text-xl text-slate-700 font-bold mt-1">{data.subtitle}</p>
+          <p
+            className={`text-base sm:text-xl font-bold mt-1 ${
+              isDark ? 'text-slate-300' : 'text-slate-700'
+            }`}
+          >
+            {data.subtitle}
+          </p>
         </div>
 
         {/* Metaphor Box */}
-        <section className="bg-[#eef5fc] border-l-6 border-[#005a9c] p-4 sm:p-6 rounded-r-xl space-y-2">
-          <h2 className="text-lg sm:text-xl font-bold text-[#005a9c] flex items-center gap-2 m-0">
+        <section
+          className={`border-l-6 p-4 sm:p-6 rounded-r-xl space-y-2 transition-colors ${
+            isDark
+              ? 'bg-slate-800/80 border-sky-400 text-slate-100'
+              : 'bg-[#eef5fc] border-[#005a9c] text-slate-900'
+          }`}
+        >
+          <h2
+            className={`text-lg sm:text-xl font-bold flex items-center gap-2 m-0 ${
+              isDark ? 'text-sky-300' : 'text-[#005a9c]'
+            }`}
+          >
             <span>{data.metaphor.icon}</span>
             <span>{data.metaphor.title}</span>
           </h2>
-          <p className="m-0 text-slate-800">{data.metaphor.description}</p>
+          <p className={`m-0 ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>
+            {data.metaphor.description}
+          </p>
         </section>
 
         {/* If this is the Dyslexia page, show an explicit launcher for SyllaboDys */}
         {data.showSyllaboDysCTA && (
-          <section className="bg-gradient-to-r from-sky-50 via-blue-50 to-indigo-50 border-3 border-[#005a9c] rounded-xl p-5 sm:p-6 shadow-sm space-y-3">
+          <section
+            className={`rounded-xl p-5 sm:p-6 shadow-sm space-y-3 transition-colors ${
+              isDark
+                ? 'bg-gradient-to-r from-sky-950/70 via-slate-800 to-indigo-950/70 border-2 border-sky-500'
+                : 'bg-gradient-to-r from-sky-50 via-blue-50 to-indigo-50 border-3 border-[#005a9c]'
+            }`}
+          >
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
               <div>
-                <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#005a9c] text-white mb-2">
+                <div
+                  className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold mb-2 ${
+                    isDark ? 'bg-sky-600 text-white' : 'bg-[#005a9c] text-white'
+                  }`}
+                >
                   <Sparkles className="w-3.5 h-3.5" />
                   <span>Outil recommandé par les orthophonistes</span>
                 </div>
-                <h3 className="text-xl font-extrabold text-[#005a9c] m-0">
+                <h3
+                  className={`text-xl font-extrabold m-0 ${
+                    isDark ? 'text-sky-300' : 'text-[#005a9c]'
+                  }`}
+                >
                   L'Atelier de Lecture Syllabique SyllaboDys 📖
                 </h3>
-                <p className="text-sm sm:text-base text-slate-800 mt-1 m-0">
-                  Colorer les syllabes en alternance (bleu/rouge, pastel, contrastes élevés) permet de
-                  soulager immédiatement le décodage et de redonner le sourire à l'élève !
+                <p
+                  className={`text-sm sm:text-base mt-1 m-0 ${
+                    isDark ? 'text-slate-200' : 'text-slate-800'
+                  }`}
+                >
+                  Colorer les syllabes en alternance (bleu/rouge, pastel, contrastes élevés) permet
+                  de soulager immédiatement le décodage et de redonner le plaisir de lire !
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => onNavigate('syllabodys')}
-                className="w-full sm:w-auto shrink-0 inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-[#005a9c] hover:bg-[#003d6b] text-white font-bold text-base transition-all shadow-md cursor-pointer focus:outline-none focus:ring-3 focus:ring-[#ffbf47]"
+                className={`w-full sm:w-auto shrink-0 inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-bold text-base transition-all shadow-md cursor-pointer focus:outline-none focus:ring-3 focus:ring-amber-400 ${
+                  isDark
+                    ? 'bg-sky-500 hover:bg-sky-400 text-slate-950 font-black'
+                    : 'bg-[#005a9c] hover:bg-[#003d6b] text-white'
+                }`}
               >
                 <span>Lancer l'Atelier SyllaboDys</span>
                 <Sparkles className="w-4 h-4 text-amber-300" />
@@ -356,17 +421,31 @@ export const ThematicPage: React.FC<ThematicPageProps> = ({ pageId, onNavigate }
 
         {/* What is it section */}
         <section className="space-y-3">
-          <h2 className="text-xl sm:text-2xl font-bold text-[#222222] border-b-2 border-[#dddddd] pb-1 m-0 flex items-center gap-2">
-            <HelpCircle className="w-5 h-5 text-[#005a9c]" />
+          <h2
+            className={`text-xl sm:text-2xl font-bold border-b-2 pb-1 m-0 flex items-center gap-2 ${
+              isDark
+                ? 'text-slate-100 border-slate-700'
+                : 'text-[#222222] border-[#dddddd]'
+            }`}
+          >
+            <HelpCircle className={`w-5 h-5 ${isDark ? 'text-sky-400' : 'text-[#005a9c]'}`} />
             <span>Mieux comprendre au quotidien</span>
           </h2>
           <ul className="space-y-2 m-0 p-0 list-none">
             {data.whatIsIt.map((item, idx) => (
               <li
                 key={idx}
-                className="flex items-start gap-3 bg-slate-50 p-3 rounded-lg border border-slate-200"
+                className={`flex items-start gap-3 p-3 rounded-lg border transition-colors ${
+                  isDark
+                    ? 'bg-slate-800/80 border-slate-700 text-slate-200'
+                    : 'bg-slate-50 border-slate-200 text-slate-900'
+                }`}
               >
-                <span className="w-2 h-2 rounded-full bg-[#005a9c] mt-2.5 shrink-0" />
+                <span
+                  className={`w-2 h-2 rounded-full mt-2.5 shrink-0 ${
+                    isDark ? 'bg-sky-400' : 'bg-[#005a9c]'
+                  }`}
+                />
                 <span>{item}</span>
               </li>
             ))}
@@ -375,17 +454,31 @@ export const ThematicPage: React.FC<ThematicPageProps> = ({ pageId, onNavigate }
 
         {/* Superpowers */}
         <section className="space-y-3">
-          <h2 className="text-xl sm:text-2xl font-bold text-[#1b5e20] border-b-2 border-emerald-200 pb-1 m-0 flex items-center gap-2">
-            <Zap className="w-5 h-5 text-emerald-600" />
+          <h2
+            className={`text-xl sm:text-2xl font-bold border-b-2 pb-1 m-0 flex items-center gap-2 ${
+              isDark
+                ? 'text-emerald-400 border-emerald-900/60'
+                : 'text-[#1b5e20] border-emerald-200'
+            }`}
+          >
+            <Zap className={`w-5 h-5 ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`} />
             <span>Les super-forces associées ✨</span>
           </h2>
           <ul className="space-y-2 m-0 p-0 list-none">
             {data.superpowers.map((item, idx) => (
               <li
                 key={idx}
-                className="flex items-start gap-3 bg-emerald-50 p-3 rounded-lg border border-emerald-200 text-emerald-950"
+                className={`flex items-start gap-3 p-3 rounded-lg border transition-colors ${
+                  isDark
+                    ? 'bg-emerald-950/40 border-emerald-800/60 text-emerald-200'
+                    : 'bg-emerald-50 border-emerald-200 text-emerald-950'
+                }`}
               >
-                <CheckCircle2 className="w-5 h-5 text-emerald-600 mt-0.5 shrink-0" />
+                <CheckCircle2
+                  className={`w-5 h-5 mt-0.5 shrink-0 ${
+                    isDark ? 'text-emerald-400' : 'text-emerald-600'
+                  }`}
+                />
                 <span>{item}</span>
               </li>
             ))}
@@ -394,17 +487,33 @@ export const ThematicPage: React.FC<ThematicPageProps> = ({ pageId, onNavigate }
 
         {/* Tips for School and Home */}
         <section className="space-y-3">
-          <h2 className="text-xl sm:text-2xl font-bold text-[#b45309] border-b-2 border-amber-200 pb-1 m-0 flex items-center gap-2">
-            <Lightbulb className="w-5 h-5 text-amber-600" />
+          <h2
+            className={`text-xl sm:text-2xl font-bold border-b-2 pb-1 m-0 flex items-center gap-2 ${
+              isDark
+                ? 'text-amber-400 border-amber-900/60'
+                : 'text-[#b45309] border-amber-200'
+            }`}
+          >
+            <Lightbulb className={`w-5 h-5 ${isDark ? 'text-amber-400' : 'text-amber-600'}`} />
             <span>Astuces pratiques pour l'école et la maison 💡</span>
           </h2>
           <ul className="space-y-2 m-0 p-0 list-none">
             {data.tipsForSchoolAndHome.map((item, idx) => (
               <li
                 key={idx}
-                className="flex items-start gap-3 bg-amber-50 p-3 rounded-lg border border-amber-200 text-amber-950"
+                className={`flex items-start gap-3 p-3 rounded-lg border transition-colors ${
+                  isDark
+                    ? 'bg-amber-950/40 border-amber-800/60 text-amber-200'
+                    : 'bg-amber-50 border-amber-200 text-amber-950'
+                }`}
               >
-                <span className="w-6 h-6 rounded-full bg-amber-200 text-amber-800 text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">
+                <span
+                  className={`w-6 h-6 rounded-full text-xs font-bold flex items-center justify-center shrink-0 mt-0.5 ${
+                    isDark
+                      ? 'bg-amber-900 text-amber-200 border border-amber-700'
+                      : 'bg-amber-200 text-amber-800'
+                  }`}
+                >
                   {idx + 1}
                 </span>
                 <span>{item}</span>
@@ -414,18 +523,30 @@ export const ThematicPage: React.FC<ThematicPageProps> = ({ pageId, onNavigate }
         </section>
 
         {/* Bottom Navigation */}
-        <div className="pt-4 border-t-2 border-slate-200 flex flex-wrap items-center justify-between gap-3">
+        <div
+          className={`pt-4 border-t-2 flex flex-wrap items-center justify-between gap-3 ${
+            isDark ? 'border-slate-800' : 'border-slate-200'
+          }`}
+        >
           <button
             type="button"
             onClick={() => onNavigate('accueil')}
-            className="px-4 py-2 rounded-lg border-2 border-[#222222] bg-white hover:bg-slate-100 font-bold text-sm sm:text-base cursor-pointer"
+            className={`px-4 py-2 rounded-lg border-2 font-bold text-sm sm:text-base cursor-pointer transition-colors ${
+              isDark
+                ? 'border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200'
+                : 'border-[#222222] bg-white hover:bg-slate-100 text-slate-900'
+            }`}
           >
             ← Retour à l'accueil
           </button>
           <button
             type="button"
             onClick={() => onNavigate('syllabodys')}
-            className="px-4 py-2 rounded-lg bg-[#005a9c] hover:bg-[#003d6b] text-white font-bold text-sm sm:text-base cursor-pointer flex items-center gap-2"
+            className={`px-4 py-2 rounded-lg font-bold text-sm sm:text-base cursor-pointer flex items-center gap-2 transition-colors ${
+              isDark
+                ? 'bg-sky-500 hover:bg-sky-400 text-slate-950 font-black'
+                : 'bg-[#005a9c] hover:bg-[#003d6b] text-white'
+            }`}
           >
             <BookOpen className="w-4 h-4" />
             <span>Tester l'Atelier SyllaboDys</span>
@@ -434,7 +555,13 @@ export const ThematicPage: React.FC<ThematicPageProps> = ({ pageId, onNavigate }
       </main>
 
       {/* Footer */}
-      <footer className="text-center p-6 bg-white border-t-2 border-[#dddddd] mt-8 text-sm sm:text-base text-slate-700">
+      <footer
+        className={`text-center p-6 border-t-2 mt-8 text-sm sm:text-base transition-colors ${
+          isDark
+            ? 'bg-slate-900 border-slate-800 text-slate-400'
+            : 'bg-white border-[#dddddd] text-slate-700'
+        }`}
+      >
         <p className="m-0 font-medium">
           Site éducatif et accessible — Conçu pour l'apprentissage et l'entraide à l'école primaire.
         </p>
