@@ -1,7 +1,6 @@
 import React from 'react';
 import { SuperPageId } from './SuperCerveauxHeader';
 import {
-  Sparkles,
   BookOpen,
   ArrowRight,
   Calculator,
@@ -25,6 +24,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate, theme }) =
   const quickCards: {
     id: SuperPageId;
     title: string;
+    subtitle?: string;
     icon: React.ReactNode;
     desc: string;
     tag: string;
@@ -32,9 +32,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate, theme }) =
   }[] = [
     {
       id: 'dyslexie',
-      title: 'Dyslexie',
+      title: 'La Dyslexie',
+      subtitle: 'Les lettres acrobates 🤸‍♂️📖',
       icon: <BookOpen className={`w-6 h-6 ${isDark ? 'text-sky-400' : 'text-sky-600'}`} />,
-      desc: 'Quand les lettres dansent ou changent de place. Découvre comment les dompter avec les syllabes !',
+      desc: "Quand les lettres d'un livre font la fête et mettent des masques pour danser sur la page !",
       tag: 'Lecture',
       tagColor: isDark
         ? 'bg-sky-950/80 text-sky-300 border-sky-800'
@@ -42,9 +43,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate, theme }) =
     },
     {
       id: 'dyscalculie',
-      title: 'Dyscalculie',
+      title: 'La Dyscalculie',
+      subtitle: 'La magie des nombres 🧮🔢',
       icon: <Calculator className={`w-6 h-6 ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`} />,
-      desc: 'Quand les nombres, les calculs et le sens du temps ont besoin de repères visuels concrets.',
+      desc: 'Comprendre les quantités, le labyrinthe des nombres mystères et trouver des outils concrets.',
       tag: 'Nombres & Mesures',
       tagColor: isDark
         ? 'bg-emerald-950/80 text-emerald-300 border-emerald-800'
@@ -52,9 +54,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate, theme }) =
     },
     {
       id: 'dyspraxie',
-      title: 'Dyspraxie',
+      title: 'La Dyspraxie',
+      subtitle: 'Les gestes maladroits 🎨✂️👟',
       icon: <Compass className={`w-6 h-6 ${isDark ? 'text-amber-400' : 'text-amber-600'}`} />,
-      desc: 'Le chef d’orchestre des mouvements et de la coordination spatiale (lacets, découpage, sport).',
+      desc: 'Le chef d’orchestre des mouvements et les musiciens qui ont besoin de temps pour jouer.',
       tag: 'Gestes & Espace',
       tagColor: isDark
         ? 'bg-amber-950/80 text-amber-300 border-amber-800'
@@ -62,9 +65,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate, theme }) =
     },
     {
       id: 'dysphasie',
-      title: 'Dysphasie',
+      title: 'La Dysphasie',
+      subtitle: 'Les mots sur le bout de la langue 🗣️💬',
       icon: <MessageSquare className={`w-6 h-6 ${isDark ? 'text-purple-400' : 'text-purple-600'}`} />,
-      desc: 'Quand les mots oraux jouent à cache-cache dans les phrases et demandent du temps.',
+      desc: 'Le petit traducteur secret du cerveau qui hésite quand on a plein de belles histoires en tête.',
       tag: 'Langage oral',
       tagColor: isDark
         ? 'bg-purple-950/80 text-purple-300 border-purple-800'
@@ -72,9 +76,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate, theme }) =
     },
     {
       id: 'dysorthographie',
-      title: 'Dysorthographie',
+      title: 'La Dysorthographie',
+      subtitle: "L'art des sons et des lettres ✍️🔍",
       icon: <PenTool className={`w-6 h-6 ${isDark ? 'text-rose-400' : 'text-rose-600'}`} />,
-      desc: 'Quand les accords et les pièges de l’orthographe s’emmêlent les pinceaux.',
+      desc: 'Le détective des secrets cachés face aux règles et aux lettres muettes des mots.',
       tag: 'Orthographe',
       tagColor: isDark
         ? 'bg-rose-950/80 text-rose-300 border-rose-800'
@@ -82,9 +87,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate, theme }) =
     },
     {
       id: 'dysgraphie',
-      title: 'Dysgraphie',
+      title: 'La Dysgraphie',
+      subtitle: 'Le crayon rebelle ✏️🎨',
       icon: <Edit3 className={`w-6 h-6 ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`} />,
-      desc: 'Quand tenir le stylo fatigue la main et que tracer les lettres demande un effort immense.',
+      desc: 'Écrire comme avec des gants de ski : comprendre la fatigue de la main et les astuces.',
       tag: 'Écriture manuelle',
       tagColor: isDark
         ? 'bg-indigo-950/80 text-indigo-300 border-indigo-800'
@@ -92,9 +98,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate, theme }) =
     },
     {
       id: 'tdah',
-      title: 'TDAH',
+      title: 'Le TDAH',
+      subtitle: 'Le moteur de fusée et les super-antennes 🚀📡',
       icon: <Zap className={`w-6 h-6 ${isDark ? 'text-orange-400' : 'text-orange-600'}`} />,
-      desc: 'Un moteur de fusée dans la tête : une curiosité géante, une immense énergie et l’hyperfocus !',
+      desc: 'Le bolide aux mille pensées et aux antennes réceptrices ultra-sensibles prêtes à explorer.',
       tag: 'Attention & Énergie',
       tagColor: isDark
         ? 'bg-orange-950/80 text-orange-300 border-orange-800'
@@ -103,8 +110,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate, theme }) =
     {
       id: 'professionnels',
       title: 'Les Alliés',
+      subtitle: "L'équipe des entraîneurs de choc 👨‍⚕️🤝",
       icon: <Users className={`w-6 h-6 ${isDark ? 'text-teal-400' : 'text-teal-600'}`} />,
-      desc: 'Orthophonistes, ergothérapeutes, enseignants, parents : la super équipe qui t’accompagne.',
+      desc: 'La dream team du cerveau : orthophonistes, ergothérapeutes, enseignants et parents bienveillants.',
       tag: 'Entourage & Soins',
       tagColor: isDark
         ? 'bg-teal-950/80 text-teal-300 border-teal-800'
@@ -113,8 +121,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate, theme }) =
     {
       id: 'super-pouvoirs',
       title: 'Super-pouvoirs',
+      subtitle: 'Nos forces & Tous ensemble ! 🌟🚀',
       icon: <Award className={`w-6 h-6 ${isDark ? 'text-yellow-400' : 'text-yellow-600'}`} />,
-      desc: 'Créativité, vision globale, empathie, persévérance : les talents cachés des profils neuroatypiques.',
+      desc: 'La ligue des esprits créatifs, l’empathie, la persévérance et le pacte d’entraide en classe.',
       tag: 'Forces uniques',
       tagColor: isDark
         ? 'bg-yellow-950/80 text-yellow-300 border-yellow-800'
@@ -194,86 +203,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate, theme }) =
             Ce n'est pas une maladie, ce n'est pas contagieux et cela n'a rien à voir avec
             l'intelligence ! C'est simplement une manière différente de fonctionner.
           </p>
-        </section>
-
-        {/* Big Highlight Card: Launch the SyllaboDys Subpage */}
-        <section
-          className={`rounded-xl p-5 sm:p-7 shadow-sm transition-colors ${
-            isDark
-              ? 'bg-gradient-to-r from-sky-950/70 via-slate-800 to-indigo-950/70 border-2 border-sky-500 shadow-lg'
-              : 'bg-gradient-to-r from-sky-50 via-blue-50 to-indigo-50 border-3 border-[#005a9c]'
-          }`}
-        >
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="space-y-2 text-left">
-              <div
-                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${
-                  isDark ? 'bg-sky-600 text-white' : 'bg-[#005a9c] text-white'
-                }`}
-              >
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>Outil pédagogique intégré</span>
-              </div>
-              <h2
-                className={`text-xl sm:text-2xl font-black m-0 ${
-                  isDark ? 'text-sky-300' : 'text-[#005a9c]'
-                }`}
-              >
-                Atelier de Lecture SyllaboDys 📖🎨
-              </h2>
-              <p
-                className={`text-base sm:text-lg m-0 max-w-xl ${
-                  isDark ? 'text-slate-200' : 'text-[#222222]'
-                }`}
-              >
-                Une application complète pour <strong>découper et colorer les syllabes</strong>,
-                espacer les mots, afficher des ponts de lecture et exporter des fiches d'exercices
-                en PDF en 1 clic !
-              </p>
-              <div className="flex flex-wrap gap-2 text-xs font-bold pt-1">
-                <span
-                  className={`px-2.5 py-0.5 rounded border ${
-                    isDark
-                      ? 'bg-slate-800 border-slate-700 text-slate-200'
-                      : 'bg-white border-slate-300 text-slate-800'
-                  }`}
-                >
-                  Polices DYS & Lexend
-                </span>
-                <span
-                  className={`px-2.5 py-0.5 rounded border ${
-                    isDark
-                      ? 'bg-slate-800 border-slate-700 text-slate-200'
-                      : 'bg-white border-slate-300 text-slate-800'
-                  }`}
-                >
-                  Palettes bicolores & tricolores
-                </span>
-                <span
-                  className={`px-2.5 py-0.5 rounded border ${
-                    isDark
-                      ? 'bg-slate-800 border-slate-700 text-slate-200'
-                      : 'bg-white border-slate-300 text-slate-800'
-                  }`}
-                >
-                  Export PDF propre A4
-                </span>
-              </div>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => onNavigate('syllabodys')}
-              className={`w-full md:w-auto shrink-0 inline-flex items-center justify-center gap-3 px-6 py-4 rounded-xl text-white font-black text-lg transition-all shadow-md hover:shadow-lg focus:outline-none focus:ring-4 focus:ring-amber-400 cursor-pointer group ${
-                isDark
-                  ? 'bg-sky-500 hover:bg-sky-400 text-slate-950 font-black'
-                  : 'bg-[#005a9c] hover:bg-[#003d6b]'
-              }`}
-            >
-              <span>Ouvrir l'Atelier SyllaboDys</span>
-              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-            </button>
-          </div>
         </section>
 
         {/* Video Section */}
@@ -365,6 +294,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate, theme }) =
                   >
                     {card.title}
                   </h3>
+                  <div
+                    className={`text-xs font-bold mt-0.5 ${
+                      isDark ? 'text-slate-300' : 'text-slate-600'
+                    }`}
+                  >
+                    {card.subtitle}
+                  </div>
                   <p
                     className={`text-sm mt-1.5 leading-normal ${
                       isDark ? 'text-slate-300' : 'text-slate-700'

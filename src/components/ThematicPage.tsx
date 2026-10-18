@@ -1,14 +1,6 @@
 import React from 'react';
 import { SuperPageId } from './SuperCerveauxHeader';
-import {
-  ArrowLeft,
-  Sparkles,
-  CheckCircle2,
-  Lightbulb,
-  Zap,
-  BookOpen,
-  HelpCircle,
-} from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 
 interface ThematicPageProps {
   pageId: SuperPageId;
@@ -16,266 +8,374 @@ interface ThematicPageProps {
   theme: 'light' | 'dark';
 }
 
-interface ThematicContent {
+interface BulletItem {
   title: string;
-  subtitle: string;
-  metaphor: {
-    title: string;
-    description: string;
-    icon: string;
+  text: string;
+}
+
+interface ThematicContent {
+  pageTitle: string;
+  story: {
+    header: string;
+    paragraphs: string[];
   };
-  whatIsIt: string[];
-  superpowers: string[];
-  tipsForSchoolAndHome: string[];
-  showSyllaboDysCTA?: boolean;
+  explanation: {
+    header: string;
+    paragraphs?: string[];
+    bullets?: BulletItem[];
+  };
+  tips: {
+    header: string;
+    bullets: BulletItem[];
+  };
 }
 
 const THEMATIC_DATA: Record<Exclude<SuperPageId, 'accueil' | 'syllabodys'>, ThematicContent> = {
   dyslexie: {
-    title: 'La Dyslexie 📖',
-    subtitle: 'Lire avec des yeux différents et dompter le mystère des lettres',
-    metaphor: {
-      title: 'L’explorateur des chemins de traverse 🧭',
-      description:
-        'Pour la plupart des gens, lire est une autoroute toute droite. Pour le cerveau dyslexique, c’est un sentier en forêt avec des panoramas magnifiques : il faut décoder les repères un par un avec persévérance !',
-      icon: '🌳',
+    pageTitle: "La Dyslexie : Les lettres acrobates 🤸‍♂️📖",
+    story: {
+      header: "L'histoire : Le bal masqué des lettres 🎭",
+      paragraphs: [
+        "Imagine que les lettres d'un livre aiment faire la fête ! Quand un enfant dyslexique ouvre un livre, les lettres comme le b, le d, le p et le q mettent des masques et dansent sur la page.",
+        "Elles se ressemblent beaucoup et se mélangent facilement. Le cerveau doit faire un grand effort d'enquêteur pour reconnaître qui est qui !",
+      ],
     },
-    whatIsIt: [
-      'Difficulté à associer rapidement les lettres (graphèmes) et leurs sons correspondants (phonèmes).',
-      'Les lettres comme b / d ou p / q peuvent sembler se retourner ou tourner comme des miroirs.',
-      'La lecture à voix haute demande une très grande énergie mentale, ce qui peut provoquer une fatigue rapide.',
-      'Cela n’a aucun rapport avec l’intelligence : de très grands inventeurs, écrivains et scientifiques sont dyslexiques !',
-    ],
-    superpowers: [
-      'Une mémoire visuelle et spatiale souvent hors du commun (pensée en 3D).',
-      'Une créativité débordante pour trouver des solutions originales.',
-      'Une capacité à voir "la grande image" (big picture) plutôt que de rester bloqué sur les détails.',
-    ],
-    tipsForSchoolAndHome: [
-      'Segmenter et colorer les syllabes en alternance (utilise notre outil SyllaboDys !).',
-      'Augmenter l’espacement entre les lignes (interligne 1.8 ou 2.0) et entre les lettres.',
-      'Utiliser des polices de caractères adaptées comme OpenDyslexic ou Lexend.',
-      'Accorder du temps supplémentaire pour lire les consignes sans stress.',
-    ],
-    showSyllaboDysCTA: true,
+    explanation: {
+      header: "Qu'est-ce que la dyslexie ? 🔍",
+      paragraphs: [
+        "La dyslexie est une difficulté particulière à transformer les lettres écrites en sons parlés.",
+        "Lire demande beaucoup plus d'énergie et de concentration. Ce n'est pas parce que l'enfant ne veut pas lire, mais parce que son cerveau emprunte un chemin plus long pour décoder les mots.",
+      ],
+    },
+    tips: {
+      header: "Conseils & astuces pour s'entraider 🤝",
+      bullets: [
+        {
+          title: "Utiliser un réglet de lecture",
+          text: "Poser une règle sous la ligne pour aider les yeux à ne pas se perdre.",
+        },
+        {
+          title: "Prendre son temps",
+          text: "Laisser son camarade lire à son rythme sans lui couper la parole.",
+        },
+        {
+          title: "Écouter des livres audio",
+          text: "C'est une super façon d'aimer les histoires en soulageant ses yeux !",
+        },
+      ],
+    },
   },
   dyscalculie: {
-    title: 'La Dyscalculie 🔢',
-    subtitle: 'Comprendre les nombres, le temps et la boussole mathématique',
-    metaphor: {
-      title: 'La balance magique des quantités ⚖️',
-      description:
-        'Quand d’autres visualisent tout de suite que 7 est plus grand que 5, le cerveau dyscalculique a besoin de peser, toucher et voir concrètement les billes sur la balance.',
-      icon: '🧮',
+    pageTitle: "La Dyscalculie : La magie des nombres 🧮🔢",
+    story: {
+      header: "L'histoire : Le labyrinthe des nombres mystères 🧩",
+      paragraphs: [
+        "Pour beaucoup, les nombres sont comme des briques très ordonnées : 1, puis 2, puis 3. Mais pour un enfant dyscalculique, les chiffres ressemblent parfois à un labyrinthe secret ou à une langue étrangère.",
+        "Imaginer la taille d'une quantité ou retenir une table de multiplication devient alors un vrai défi qui demande des trésors d'astuces.",
+      ],
     },
-    whatIsIt: [
-      'Difficulté persistante à mémoriser les tables d’addition et de multiplication.',
-      'Difficulté à estimer des grandeurs, des distances ou à lire l’heure sur une horloge à aiguilles.',
-      'Confusion fréquente entre les symboles mathématiques (+, -, ×, ÷).',
-      'Difficulté à manipuler la monnaie ou à compter de tête.',
-    ],
-    superpowers: [
-      'Grande sensibilité artistique, littéraire ou verbale.',
-      'Sens développé de l’empathie et de la narration.',
-      'Talent pour conceptualiser des idées abstraites sans passer par des chiffres.',
-    ],
-    tipsForSchoolAndHome: [
-      'Utiliser du matériel manipulable : jetons, réglettes Cuisenaire, perles ou LEGO.',
-      'Associer des couleurs à chaque opération (+ en vert, - en rouge).',
-      'Autoriser les tables mémo et la calculatrice en classe.',
-      'Privilégier les montres digitales avec repères de temps visuels (ex: Time Timer).',
-    ],
+    explanation: {
+      header: "Qu'est-ce que la dyscalculie ? 💡",
+      paragraphs: [
+        "La dyscalculie touche la compréhension des nombres, des formes géométriques, du temps et des calculs mathématiques.",
+        "Cela ne veut pas dire qu'on ne peut pas aimer les maths ! Cela veut dire qu'on a besoin d'outils concrets (comme des objets, des dessins ou des bouliers) pour bien se représenter ce que représentent les chiffres.",
+      ],
+    },
+    tips: {
+      header: "Conseils & astuces pour s'entraider 🤝",
+      bullets: [
+        {
+          title: "Utiliser des objets ou ses doigts",
+          text: "Compter avec des jetons, des bandes numériques ou des lignes du temps.",
+        },
+        {
+          title: "Dessiner les problèmes",
+          text: "Transformer un énoncé de maths en un petit dessin coloré.",
+        },
+        {
+          title: "Prendre du matériel visuel",
+          text: "S'aider de tables d'addition/multiplication sous la main.",
+        },
+      ],
+    },
   },
   dyspraxie: {
-    title: 'La Dyspraxie ✂️',
-    subtitle: 'L’orchestration des gestes du quotidien et de l’espace',
-    metaphor: {
-      title: 'L’astronaute en apesanteur 🧑‍🚀',
-      description:
-        'Chaque geste automatique (nouer ses lacets, découper droit, faire du vélo) demande au cerveau dyspraxique de recalculer la trajectoire à chaque milliseconde, comme un pilote de navette spatiale !',
-      icon: '🚀',
+    pageTitle: "La Dyspraxie : Les gestes maladroits 🎨✂️👟",
+    story: {
+      header: "L'histoire : Le chef d'orchestre des mouvements 🎼",
+      paragraphs: [
+        "Imagine que ton cerveau soit un chef d'orchestre qui envoie des messages à tes mains et tes pieds. Pour fermer une fermeture éclair, nouer ses lacets ou découper une feuille, il faut envoyer plusieurs ordres très vite !",
+        "Chez un enfant dyspraxique, les musiciens mettent un peu plus de temps à recevoir la partition du chef d'orchestre. Le geste demande beaucoup plus d'efforts et d'attention.",
+      ],
     },
-    whatIsIt: [
-      'Difficulté à planifier et automatiser les gestes moteurs fins (boutons, fermeture éclair, compas).',
-      'Difficulté à organiser son regard dans une page ou sur un tableau (trouble visuo-spatial).',
-      'Tendance à trébucher, se cogner ou renverser des verres malgré une attention sincère.',
-      'Lenteur pour préparer son cartable ou ranger ses affaires dans l’espace.',
-    ],
-    superpowers: [
-      'Excellente mémoire auditive : apprend très vite en écoutant.',
-      'Vocabulaire riche et passion pour les débats oraux.',
-      'Grande persévérance face aux défis manuels.',
-    ],
-    tipsForSchoolAndHome: [
-      'Utiliser des ciseaux à ressort, des crayons ergonomiques ou un ordinateur à l’école.',
-      'Mettre des repères de couleur (lignes d’écriture Seyès avec ligne de terre marron, herbe verte, ciel bleu).',
-      'Décomposer les consignes complexes en étapes simples numérotées.',
-      'Valoriser les évaluations orales.',
-    ],
+    explanation: {
+      header: "Qu'est-ce que la dyspraxie ? 💡",
+      paragraphs: [
+        "La dyspraxie est un trouble de la planification et de la coordination des mouvements.",
+        "Faire du vélo, utiliser des ciseaux, dessiner ou s'habiller demande une énergie immense. Les personnes dyspraxiques ne font pas exprès d'être \"maladroites\" : leur cerveau doit réapprendre chaque geste séparément.",
+      ],
+    },
+    tips: {
+      header: "Conseils & astuces pour s'entraider 🤝",
+      bullets: [
+        {
+          title: "Utiliser des outils adaptés",
+          text: "Des ciseaux ergonomiques, des chaussures à scratchs ou du matériel antidérapant.",
+        },
+        {
+          title: "Encourager sans presser",
+          text: "Laisser du temps pour s'habiller ou ranger ses affaires sans se moquer des petits accidents.",
+        },
+        {
+          title: "Proposer son aide",
+          text: "Tenir la feuille pendant que son camarade découpe ou colle un élément.",
+        },
+      ],
+    },
   },
   dysphasie: {
-    title: 'La Dysphasie 🗣️',
-    subtitle: 'Trouver le bon mot dans la bibliothèque secrète de la parole',
-    metaphor: {
-      title: 'Le mot de passe magique 🗝️',
-      description:
-        'La tête est remplie d’idées géniales, d’images et d’histoires, mais la porte de sortie de la voix demande un code secret qui prend un peu de temps à s’ouvrir.',
-      icon: '💭',
+    pageTitle: "La Dysphasie : Les mots sur le bout de la langue 🗣️💬",
+    story: {
+      header: "L'histoire : Le traducteur un peu débordé 🎙️",
+      paragraphs: [
+        "Imagine que dans ta tête, tu as plein d'idées géniales et de belles histoires à raconter. Mais au moment de parler, le petit traducteur secret de ton cerveau hésite ou mélange la place des mots.",
+        "Le mot que tu cherches est juste là, sur le bout de la langue, mais il met un peu plus de temps à sortir !",
+      ],
     },
-    whatIsIt: [
-      'Trouble structurel de l’acquisition du langage oral (articulation, syntaxe, compréhension).',
-      'Difficulté à trouver le mot juste au moment voulu (phénomène du "mot sur le bout de la langue").',
-      'Difficulté à organiser les phrases dans le bon ordre chronologique.',
-      'Compréhension parfois plus lente des phrases longues ou des doubles sens / métaphores.',
-    ],
-    superpowers: [
-      'Sens prodigieux de l’observation et décodage fin des expressions du visage.',
-      'Talents dans les arts visuels, la construction mécanique ou le dessin.',
-      'Patience et écoute attentive envers les autres.',
-    ],
-    tipsForSchoolAndHome: [
-      'S’appuyer sur des pictogrammes, photos et dessins pour accompagner la parole.',
-      'Faire des phrases courtes avec un débit posé et régulier.',
-      'Laisser du temps à l’enfant pour répondre sans lui couper la parole.',
-      'Reformuler positivement sans faire répéter sans cesse.',
-    ],
+    explanation: {
+      header: "Qu'est-ce que la dysphasie ? 💡",
+      paragraphs: [
+        "La dysphasie est un trouble du langage oral qui touche la façon d'exprimer ses idées ou de comprendre ce que disent les autres.",
+        "Trouver le bon mot, construire de longues phrases ou suivre une consigne orale très rapide demande un gros effort d'attention.",
+      ],
+    },
+    tips: {
+      header: "Conseils & astuces pour s'entraider 🤝",
+      bullets: [
+        {
+          title: "S'aider des gestes et des images",
+          text: "Utiliser des dessins ou pointer du doigt pour compléter sa parole.",
+        },
+        {
+          title: "Faire des phrases simples",
+          text: "Parler calmement, une idée à la fois.",
+        },
+        {
+          title: "Écouter avec patience",
+          text: "Laisser son camarade finir ses phrases sans lui couper la parole ou deviner trop vite à sa place.",
+        },
+      ],
+    },
   },
   dysorthographie: {
-    title: 'La Dysorthographie ✍️',
-    subtitle: 'Naviguer dans les pièges de la langue française sans perdre le cap',
-    metaphor: {
-      title: 'Le puzzle des lettres silencieuses 🧩',
-      description:
-        'En français, beaucoup de lettres ne se prononcent pas (comme les "e", les "s" ou les "ent") ! Pour un cerveau dysorthographique, c’est comme chercher des pièces invisibles dans un puzzle.',
-      icon: '🔍',
+    pageTitle: "La Dysorthographie : L'art des sons et des lettres ✍️🔍",
+    story: {
+      header: "L'histoire : Le détective des secrets cachés 🕵️",
+      paragraphs: [
+        "Dans la langue française, les mots sont parfois de vraies énigmes ! Pourquoi y a-t-il un \"s\" muet à la fin de \"temps\" ? Pourquoi \"eau\" fait le son [o] ?",
+        "Pour un enfant dysorthographique, retenir l'orthographe exacte des mots et les règles d'accord ressemble à une enquête sans fin où les règles changent tout le temps.",
+      ],
     },
-    whatIsIt: [
-      'Difficulté persistante à mémoriser l’orthographe lexicale des mots courants.',
-      'Oubli fréquent des accords en genre et en nombre (singulier/pluriel, féminin/masculin).',
-      'Confusion entre homophones (a / à, et / est, on / ont, son / sont).',
-      'Découpage erroné des mots ("lavion" pour "l’avion").',
-    ],
-    superpowers: [
-      'Grande richesse d’imagination et inventivité dans les récits.',
-      'Capacité à inventer des mots nouveaux et métaphores percutantes.',
-      'Esprit logique qui cherche à simplifier ce qui est inutilement compliqué.',
-    ],
-    tipsForSchoolAndHome: [
-      'Utiliser des cartes mentales illustrées et des dessins mnémotechniques.',
-      'Valoriser le fond et les idées plutôt que de compter uniquement les fautes.',
-      'Recourir aux correcteurs orthographiques et à la synthèse vocale.',
-      'Créer son propre répertoire de mots avec des codes couleur.',
-    ],
+    explanation: {
+      header: "Qu'est-ce que la dysorthographie ? 💡",
+      paragraphs: [
+        "La dysorthographie est une difficulté durable à assimiler l'orthographe, les accords et la découpe des mots dans la phrase.",
+        "Elle est souvent associée à la dyslexie. L'enfant entend bien les sons, mais le cerveau a du mal à fixer la \"photo\" exacte du mot dans sa mémoire.",
+      ],
+    },
+    tips: {
+      header: "Conseils & astuces pour s'entraider 🤝",
+      bullets: [
+        {
+          title: "Créer des fiches illustrées",
+          text: "Associer un petit dessin ou une couleur à la lettre muette d'un mot (ex: un grand \"T\" en forme de toit pour \"chat\").",
+        },
+        {
+          title: "Utiliser des correcteurs vocaux",
+          text: "S'aider d'outils numériques pour relire ses écrits.",
+        },
+        {
+          title: "Privilégier le fond sur la forme",
+          text: "Valoriser les bonnes idées racontées plutôt que de compter uniquement les fautes d'orthographe.",
+        },
+      ],
+    },
   },
   dysgraphie: {
-    title: 'La Dysgraphie ✏️',
-    subtitle: 'Détendre la main et donner des ailes à l’écriture',
-    metaphor: {
-      title: 'Le pinceau qui pèse une tonne 🖌️',
-      description:
-        'Quand écrire une simple phrase demande autant d’efforts musculaires que de courir un sprint, la main se fatigue vite et a besoin de repos et d’outils adaptés.',
-      icon: '💪',
+    pageTitle: "La Dysgraphie : Le crayon rebelle ✏️🎨",
+    story: {
+      header: "L'histoire : Dessiner avec des gants de ski ⛷️✏️",
+      paragraphs: [
+        "Pour comprendre ce que ressent un enfant dysgraphique, imagine que tu dois écrire toute une journée en portant de gros gants de ski.",
+        "Tenir le stylo fait vite mal aux doigts, la main fatigue énormément et tracer de belles boucles régulières demande une attention de tous les instants.",
+      ],
     },
-    whatIsIt: [
-      'Lenteur excessive et crispation douloureuse lors de l’écriture manuelle.',
-      'Tracé irrégulier, lettres mal formées ou de tailles très disparates.',
-      'Difficulté à rester sur la ligne d’écriture et à doser la pression sur la feuille.',
-      'La concentration est tellement absorbée par le geste graphique que l’enfant ne peut plus penser à l’orthographe.',
-    ],
-    superpowers: [
-      'Facilité d’expression à l’oral quand la contrainte du stylo disparaît.',
-      'Aisance rapide avec les outils numériques, claviers et tablettes.',
-      'Créativité et intuition.',
-    ],
-    tipsForSchoolAndHome: [
-      'Essayer des manchons en silicone ergonomiques sur les stylos pour détendre la pince.',
-      'Fournir des photocopies des cours pour limiter la copie longue au tableau.',
-      'Pratiquer des exercices d’échauffement des doigts (piano, pâte à modeler).',
-      'Introduire l’ordinateur portable ou la dictée vocale.',
-    ],
+    explanation: {
+      header: "Qu'est-ce que la dysgraphie ? 💡",
+      paragraphs: [
+        "La dysgraphie est un trouble qui affecte le geste d'écriture (la forme des lettres, la vitesse et la régularité du tracé).",
+        "Ce n'est absolument pas de la paresse ou du soin négligé : la main se fatigue simplement beaucoup plus vite que chez les autres enfants.",
+      ],
+    },
+    tips: {
+      header: "Conseils & astuces pour s'entraider 🤝",
+      bullets: [
+        {
+          title: "Utiliser un guide-doigts",
+          text: "Mettre un petit embout en caoutchouc sur son crayon pour mieux le tenir.",
+        },
+        {
+          title: "Découvrir le clavier",
+          text: "Utiliser un ordinateur pour taper les textes plus rapidement sans fatigue physique.",
+        },
+        {
+          title: "Faire des pauses étirements",
+          text: "Détendre ses doigts et son poignet en faisant l'étoile de mer avec la main !",
+        },
+      ],
+    },
   },
   tdah: {
-    title: 'Le TDAH ⚡',
-    subtitle: 'Trouble du Déficit de l’Attention avec ou sans Hyperactivité',
-    metaphor: {
-      title: 'Le moteur de Formule 1 avec des freins de vélo 🏎️',
-      description:
-        'Le cerveau tourne à 1000 km/h, prêt à explorer le monde entier ! Le secret est simplement d’apprendre à piloter cette incroyable puissance motrice avec de bons amortisseurs.',
-      icon: '💥',
+    pageTitle: "Le TDAH : Le moteur de fusée et les super-antennes 🚀📡",
+    story: {
+      header: "L'histoire : Le bolide aux mille pensées 🏎️🧠",
+      paragraphs: [
+        "Imagine que ton cerveau soit un moteur de formule 1 très puissant, connecté à des antennes réceptrices ultra-sensibles qui captent le moindre petit bruit : l'oiseau à la fenêtre, le crayon qui tombe, ou le murmure dans le couloir.",
+        "Le moteur va très vite, mais les freins de la voiture demandent un apprentissage particulier pour bien doser la vitesse et rester sur le circuit !",
+      ],
     },
-    whatIsIt: [
-      'Attention volatile : difficulté à maintenir la concentration sur des tâches jugées monotones.',
-      'Besoin irrésistible de bouger les jambes, les mains ou de changer de posture (hyperactivité motrice).',
-      'Impulsivité : répondre avant la fin de la question, agir avant de peser les conséquences.',
-      'L’Hyperfocus : une capacité extraordinaire à se concentrer pendant des heures sur un sujet passionnant !',
-    ],
-    superpowers: [
-      'Énergie contagieuse, enthousiasme et spontanéité.',
-      'Curiosité insatiable pour de multiples centres d’intérêt.',
-      'Grande réactivité en situation d’urgence et esprit d’initiative.',
-      'Capacité d’hyper-concentration sur les passions.',
-    ],
-    tipsForSchoolAndHome: [
-      'Autoriser les assises dynamiques (galette d’air, élastique de chaise, coussin proprioceptif).',
-      'Proposer des pauses motrices actives régulières ("va effacer le tableau").',
-      'Utiliser des minuteurs visuels (Time Timer) et découper le travail en tranches de 15 minutes.',
-      'Valoriser chaque réussite avec des feedbacks immédiats et chaleureux.',
-    ],
+    explanation: {
+      header: "Qu'est-ce que le TDAH ? 💡",
+      paragraphs: [
+        "TDAH signifie Trouble du Déficit de l'Attention avec ou sans Hyperactivité.",
+        "Le cerveau capte tout en même temps ! Il a parfois du mal à filtrer les informations inutiles, ce qui rend l'écoute prolongée difficile ou donne une grande envie de bouger pour se reconcentrer.",
+      ],
+    },
+    tips: {
+      header: "Conseils & astuces pour s'entraider 🤝",
+      bullets: [
+        {
+          title: "Faire de petites pauses mouvements",
+          text: "S'accorder quelques secondes pour s'étirer ou bouger discrètement (ex: ballon assise ou fidget).",
+        },
+        {
+          title: "Découper le travail en mini-missions",
+          text: "Se concentrer sur une seule tâche courte à la fois.",
+        },
+        {
+          title: "Créer un espace calme",
+          text: "Éloigner les objets distrayants au moment des devoirs.",
+        },
+      ],
+    },
   },
   professionnels: {
-    title: 'Les Alliés des Super Cerveaux 🤝',
-    subtitle: 'Qui sont les spécialistes bienveillants qui t’aident au quotidien ?',
-    metaphor: {
-      title: 'L’équipe des coachs de super-héros 🛡️',
-      description:
-        'Comme Batman a Alfred ou les Avengers ont Nick Fury, chaque enfant au profil DYS a une équipe d’experts passionnés pour lui donner les meilleurs gadgets et astuces !',
-      icon: '⭐',
+    pageTitle: "Les Alliés : L'équipe des entraîneurs de choc 👨‍⚕️🤝",
+    story: {
+      header: "L'histoire : La dream team du cerveau 🦸✨",
+      paragraphs: [
+        "Même les plus grands champions du monde ont besoin d'entraîneurs, de préparateurs physiques et de spécialistes pour réussir des exploits.",
+        "Pour les enfants avec des troubles DYS, c'est la même chose ! Ils ont autour d'eux une équipe formidable d'adultes bienveillants, chacun spécialisé dans un domaine précis pour les aider à s'épanouir.",
+      ],
     },
-    whatIsIt: [
-      'L’Orthophoniste : le spécialiste du langage, de la lecture, de la parole et de la logique mathématique.',
-      'L’Ergothérapeute : le magicien de l’autonomie, de la coordination motrice fine et de l’ordinateur en classe.',
-      'Le Psychomotricien : l’expert du corps dans l’espace, de l’équilibre, du rythme et de la gestion des émotions.',
-      'Le Neuropsychologue : le détective des fonctions cognitives (mémoire, attention, vitesse de traitement).',
-      'L’AESH (Accompagnant des Élèves en Situation de Handicap) : le copilote bienveillant en classe.',
-      'Les Enseignants et les Parents : les premiers supporters indispensables de chaque jour.',
-    ],
-    superpowers: [
-      'Travailler en équipe crée une immense confiance en soi.',
-      'Apprendre à connaître ses propres forces pour devenir autonome.',
-      'Transformer chaque obstacle en une étape d’apprentissage.',
-    ],
-    tipsForSchoolAndHome: [
-      'Communiquer régulièrement entre l’école, les spécialistes et la maison (cahier de liaison, réunions d’équipe).',
-      'Mettre en place des aménagements officiels (PAP, PPRE ou PPS).',
-      'Toujours expliquer à l’enfant pourquoi on fait les bilans et célébrer ses progrès !',
-    ],
+    explanation: {
+      header: "Qui sont tous ces super professionnels ? 💡",
+      bullets: [
+        {
+          title: "L'Orthophoniste",
+          text: "Le coach des mots, de la lecture, de la parole et des calculs.",
+        },
+        {
+          title: "Le Psychologue / Neuropsychologue",
+          text: "L'enquêteur du cerveau ! Il évalue la mémoire, la concentration et aide à comprendre ses émotions et ses super forces.",
+        },
+        {
+          title: "Le Psychomotricien",
+          text: "L'entraîneur de l'équilibre, de la coordination du corps, du repérage dans l'espace et du geste de la main.",
+        },
+        {
+          title: "L'Ergothérapeute",
+          text: "Le spécialiste des astuces du quotidien ! Il aide à utiliser l'ordinateur, les outils adaptés et à organiser son bureau.",
+        },
+        {
+          title: "L'Orthoptiste",
+          text: "L'expert de la vue et des yeux ! Il rééduque les muscles des yeux pour que le regard suive bien les lignes de lecture.",
+        },
+        {
+          title: "Le Médecin (Pédiatre, Neuropédiatre)",
+          text: "Le docteur capitaine qui coordonne la santé et valide les bilans.",
+        },
+        {
+          title: "Les alliés à l'école (Enseignant, AESH)",
+          text: "Les guides au quotidien qui adaptent le travail en classe et encouragent chaque élève.",
+        },
+      ],
+    },
+    tips: {
+      header: "Quels sont les super aménagements à l'école ? 🎒",
+      bullets: [
+        {
+          title: "Le temps supplémentaire",
+          text: "Avoir un peu plus de temps pour terminer un contrôle sans se presser.",
+        },
+        {
+          title: "Les supports adaptés",
+          text: "Textes écrits plus gros, couleurs repères ou ordinateur en classe.",
+        },
+        {
+          title: "Le droit de souffler",
+          text: "Des petites pauses autorisées pour détendre son attention et son corps.",
+        },
+      ],
+    },
   },
   'super-pouvoirs': {
-    title: 'Les Super-pouvoirs des Cerveaux Extraordinaires 🌟',
-    subtitle: 'Célébrer la neurodiversité et déployer ses talents uniques',
-    metaphor: {
-      title: 'Le kaléidoscope des esprits créatifs 💎',
-      description:
-        'Si tous les arbres étaient identiques, la forêt serait monotone. La diversité des cerveaux est une richesse irremplaçable pour l’humanité !',
-      icon: '✨',
+    pageTitle: "Nos super-pouvoirs & Tous ensemble ! 🌟🚀",
+    story: {
+      header: "L'histoire : La ligue des esprits créatifs 🎨🧩💡",
+      paragraphs: [
+        "Savais-tu que de très grands inventeurs, artistes, scientifiques et champions de sport étaient dyslexiques, dyspraxiques ou avaient un TDAH ?",
+        "Parce que leur cerveau fonctionne différemment, ils ont développé une imagination débordante, une grande mémoire visuelle, une énergie incroyable et une façon unique de résoudre les problèmes !",
+      ],
     },
-    whatIsIt: [
-      'La pensée visuo-spatiale : imaginer des objets en 3 dimensions, construire, sculpter, inventer.',
-      'L’intuition foudroyante : arriver à la bonne réponse sans savoir expliquer le calcul.',
-      'La créativité narrative : imaginer des mondes fantastiques, des histoires palpitantes et des œuvres d’art.',
-      'La résilience exemplaire : apprendre dès le plus jeune âge à persévérer et surmonter les difficultés.',
-      'L’empathie chaleureuse : une sensibilité accrue aux émotions et aux besoins d’autrui.',
-    ],
-    superpowers: [
-      'Léonard de Vinci, Albert Einstein, Walt Disney, Agatha Christie, Thomas Edison, Steven Spielberg... tous avaient un cerveau différent !',
-      'Le monde de demain a besoin d’esprits qui pensent "hors du bocal" (out of the box).',
-      'Ta différence est ta signature la plus précieuse.',
-    ],
-    tipsForSchoolAndHome: [
-      'Garder un carnet de ses super-pouvoirs et de ses petites victoires quotidiennes.',
-      'Pratiquer des activités où l’on excelle (dessin, théâtre, lego, cuisine, natation, musique).',
-      'Se rappeler chaque jour : "Mon cerveau fonctionne différemment, et c’est ma force !"',
-    ],
+    explanation: {
+      header: "Quels sont nos super-pouvoirs ? 💡",
+      bullets: [
+        {
+          title: "Une créativité débordante",
+          text: "Inventer des histoires, dessiner, construire et imaginer des solutions originales.",
+        },
+        {
+          title: "Une grande empathie",
+          text: "Comprendre facilement ce que ressentent les autres et aimer les aider.",
+        },
+        {
+          title: "Une vision globale",
+          text: "Voir le tableau d'ensemble très rapidement avant même d'étudier les détails.",
+        },
+        {
+          title: "Une persévérance de champion",
+          text: "À force de s'entraîner, les enfants DYS développent un courage et une volonté extraordinaires !",
+        },
+      ],
+    },
+    tips: {
+      header: "Le pacte de l'entraide en classe 🤝",
+      bullets: [
+        {
+          title: "Célébrer la différence",
+          text: "Chaque élève est fort dans un domaine et a besoin d'aide dans un autre.",
+        },
+        {
+          title: "S'encourager tous les jours",
+          text: "Un mot gentil ou un geste d'aide rend la classe plus forte et plus heureuse.",
+        },
+        {
+          title: "N'avoir jamais honte de demander",
+          text: "Poser une question, c'est le premier pas pour apprendre !",
+        },
+      ],
+    },
   },
 };
 
@@ -292,7 +392,7 @@ export const ThematicPage: React.FC<ThematicPageProps> = ({ pageId, onNavigate, 
       }`}
     >
       <main
-        className={`max-w-[920px] mx-auto rounded-xl p-5 sm:p-8 space-y-8 transition-colors ${
+        className={`max-w-[860px] mx-auto rounded-xl p-6 sm:p-10 space-y-7 transition-colors ${
           isDark
             ? 'bg-slate-900 border-2 border-slate-700 shadow-2xl'
             : 'bg-white border-2 border-[#222222] shadow-md'
@@ -300,7 +400,7 @@ export const ThematicPage: React.FC<ThematicPageProps> = ({ pageId, onNavigate, 
       >
         {/* Top Navigation button back to Home */}
         <div
-          className={`flex items-center justify-between border-b-2 pb-4 ${
+          className={`flex items-center justify-start border-b-2 pb-4 ${
             isDark ? 'border-slate-800' : 'border-slate-200'
           }`}
         >
@@ -314,209 +414,142 @@ export const ThematicPage: React.FC<ThematicPageProps> = ({ pageId, onNavigate, 
             <ArrowLeft className="w-4 h-4" />
             <span>Retour à l'accueil</span>
           </button>
-
-          <button
-            type="button"
-            onClick={() => onNavigate('syllabodys')}
-            className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-bold shadow-xs cursor-pointer transition-colors ${
-              isDark
-                ? 'bg-sky-500 hover:bg-sky-400 text-slate-950 font-black'
-                : 'bg-[#0284c7] hover:bg-[#0369a1] text-white'
-            }`}
-          >
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>Atelier SyllaboDys</span>
-          </button>
         </div>
 
-        {/* Page Header */}
-        <div>
-          <h1
-            className={`text-2xl sm:text-4xl font-extrabold m-0 tracking-tight leading-tight ${
-              isDark ? 'text-sky-400' : 'text-[#005a9c]'
-            }`}
-          >
-            {data.title}
-          </h1>
-          <p
-            className={`text-base sm:text-xl font-bold mt-1 ${
-              isDark ? 'text-slate-300' : 'text-slate-700'
-            }`}
-          >
-            {data.subtitle}
-          </p>
-        </div>
+        {/* 1. Page Header matching user's image exactly */}
+        <h1
+          className={`text-2xl sm:text-3xl lg:text-4xl font-extrabold m-0 tracking-tight leading-tight ${
+            isDark ? 'text-sky-400' : 'text-[#005a9c]'
+          }`}
+        >
+          {data.pageTitle}
+        </h1>
 
-        {/* Metaphor Box */}
+        {/* 2. Story Box ("L'histoire") matching user's image */}
         <section
-          className={`border-l-6 p-4 sm:p-6 rounded-r-xl space-y-2 transition-colors ${
+          className={`border-l-[5px] p-5 sm:p-6 rounded-r-lg space-y-3 transition-colors ${
             isDark
-              ? 'bg-slate-800/80 border-sky-400 text-slate-100'
+              ? 'bg-slate-800/85 border-sky-400 text-slate-100'
               : 'bg-[#eef5fc] border-[#005a9c] text-slate-900'
           }`}
         >
           <h2
-            className={`text-lg sm:text-xl font-bold flex items-center gap-2 m-0 ${
-              isDark ? 'text-sky-300' : 'text-[#005a9c]'
+            className={`text-xl sm:text-2xl font-bold m-0 ${
+              isDark ? 'text-sky-300' : 'text-[#0f172a]'
             }`}
           >
-            <span>{data.metaphor.icon}</span>
-            <span>{data.metaphor.title}</span>
+            {data.story.header}
           </h2>
-          <p className={`m-0 ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>
-            {data.metaphor.description}
-          </p>
+
+          <div
+            className={`border-b my-2 ${
+              isDark ? 'border-slate-700/80' : 'border-[#d8e7f5]'
+            }`}
+          />
+
+          <div className="space-y-3 text-base sm:text-lg leading-relaxed">
+            {data.story.paragraphs.map((p, idx) => (
+              <p key={idx} className="m-0">
+                {/* Highlight letters b, d, p, q in bold as in image 1 */}
+                {p.includes('le b, le d, le p et le q') ? (
+                  <>
+                    Imagine que les lettres d'un livre aiment faire la fête ! Quand un enfant dyslexique
+                    ouvre un livre, les lettres comme le <strong>b</strong>, le <strong>d</strong>, le{' '}
+                    <strong>p</strong> et le <strong>q</strong> mettent des masques et dansent sur la
+                    page.
+                  </>
+                ) : (
+                  p
+                )}
+              </p>
+            ))}
+          </div>
         </section>
 
-        {/* If this is the Dyslexia page, show an explicit launcher for SyllaboDys */}
-        {data.showSyllaboDysCTA && (
-          <section
-            className={`rounded-xl p-5 sm:p-6 shadow-sm space-y-3 transition-colors ${
-              isDark
-                ? 'bg-gradient-to-r from-sky-950/70 via-slate-800 to-indigo-950/70 border-2 border-sky-500'
-                : 'bg-gradient-to-r from-sky-50 via-blue-50 to-indigo-50 border-3 border-[#005a9c]'
+        {/* 3. Explanation Section matching user's image */}
+        <section className="space-y-3 pt-1">
+          <h2
+            className={`text-xl sm:text-2xl font-bold m-0 ${
+              isDark ? 'text-slate-100' : 'text-[#111111]'
             }`}
           >
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div>
-                <div
-                  className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold mb-2 ${
-                    isDark ? 'bg-sky-600 text-white' : 'bg-[#005a9c] text-white'
-                  }`}
-                >
-                  <Sparkles className="w-3.5 h-3.5" />
-                  <span>Outil recommandé par les orthophonistes</span>
-                </div>
-                <h3
-                  className={`text-xl font-extrabold m-0 ${
-                    isDark ? 'text-sky-300' : 'text-[#005a9c]'
-                  }`}
-                >
-                  L'Atelier de Lecture Syllabique SyllaboDys 📖
-                </h3>
+            {data.explanation.header}
+          </h2>
+
+          <div
+            className={`border-b my-2 ${
+              isDark ? 'border-slate-700' : 'border-gray-200'
+            }`}
+          />
+
+          {data.explanation.paragraphs && (
+            <div className="space-y-3 text-base sm:text-lg leading-relaxed">
+              {data.explanation.paragraphs.map((p, idx) => (
                 <p
-                  className={`text-sm sm:text-base mt-1 m-0 ${
-                    isDark ? 'text-slate-200' : 'text-slate-800'
-                  }`}
+                  key={idx}
+                  className={`m-0 ${isDark ? 'text-slate-200' : 'text-slate-800'}`}
                 >
-                  Colorer les syllabes en alternance (bleu/rouge, pastel, contrastes élevés) permet
-                  de soulager immédiatement le décodage et de redonner le plaisir de lire !
+                  {p}
                 </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => onNavigate('syllabodys')}
-                className={`w-full sm:w-auto shrink-0 inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-bold text-base transition-all shadow-md cursor-pointer focus:outline-none focus:ring-3 focus:ring-amber-400 ${
-                  isDark
-                    ? 'bg-sky-500 hover:bg-sky-400 text-slate-950 font-black'
-                    : 'bg-[#005a9c] hover:bg-[#003d6b] text-white'
-                }`}
-              >
-                <span>Lancer l'Atelier SyllaboDys</span>
-                <Sparkles className="w-4 h-4 text-amber-300" />
-              </button>
+              ))}
             </div>
-          </section>
-        )}
+          )}
 
-        {/* What is it section */}
-        <section className="space-y-3">
-          <h2
-            className={`text-xl sm:text-2xl font-bold border-b-2 pb-1 m-0 flex items-center gap-2 ${
-              isDark
-                ? 'text-slate-100 border-slate-700'
-                : 'text-[#222222] border-[#dddddd]'
-            }`}
-          >
-            <HelpCircle className={`w-5 h-5 ${isDark ? 'text-sky-400' : 'text-[#005a9c]'}`} />
-            <span>Mieux comprendre au quotidien</span>
-          </h2>
-          <ul className="space-y-2 m-0 p-0 list-none">
-            {data.whatIsIt.map((item, idx) => (
-              <li
-                key={idx}
-                className={`flex items-start gap-3 p-3 rounded-lg border transition-colors ${
-                  isDark
-                    ? 'bg-slate-800/80 border-slate-700 text-slate-200'
-                    : 'bg-slate-50 border-slate-200 text-slate-900'
-                }`}
-              >
-                <span
-                  className={`w-2 h-2 rounded-full mt-2.5 shrink-0 ${
-                    isDark ? 'bg-sky-400' : 'bg-[#005a9c]'
-                  }`}
-                />
-                <span>{item}</span>
-              </li>
-            ))}
-          </ul>
+          {data.explanation.bullets && (
+            <ul className="space-y-2.5 m-0 p-0 list-none text-base sm:text-lg leading-relaxed">
+              {data.explanation.bullets.map((b, idx) => (
+                <li key={idx} className="flex items-start gap-2.5">
+                  <span
+                    className={`font-black select-none text-lg leading-normal ${
+                      isDark ? 'text-sky-400' : 'text-[#005a9c]'
+                    }`}
+                  >
+                    •
+                  </span>
+                  <span>
+                    <strong className="font-bold">{b.title}</strong> : {b.text}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
         </section>
 
-        {/* Superpowers */}
-        <section className="space-y-3">
+        {/* 4. Tips Box ("Conseils & astuces") matching user's image */}
+        <section
+          className={`border-l-[5px] p-5 sm:p-6 rounded-r-lg space-y-3 transition-colors ${
+            isDark
+              ? 'bg-emerald-950/35 border-emerald-500 text-emerald-100'
+              : 'bg-[#eef7ee] border-[#2e7d32] text-slate-900'
+          }`}
+        >
           <h2
-            className={`text-xl sm:text-2xl font-bold border-b-2 pb-1 m-0 flex items-center gap-2 ${
-              isDark
-                ? 'text-emerald-400 border-emerald-900/60'
-                : 'text-[#1b5e20] border-emerald-200'
+            className={`text-xl sm:text-2xl font-bold m-0 ${
+              isDark ? 'text-emerald-400' : 'text-[#1b5e20]'
             }`}
           >
-            <Zap className={`w-5 h-5 ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`} />
-            <span>Les super-forces associées ✨</span>
+            {data.tips.header}
           </h2>
-          <ul className="space-y-2 m-0 p-0 list-none">
-            {data.superpowers.map((item, idx) => (
-              <li
-                key={idx}
-                className={`flex items-start gap-3 p-3 rounded-lg border transition-colors ${
-                  isDark
-                    ? 'bg-emerald-950/40 border-emerald-800/60 text-emerald-200'
-                    : 'bg-emerald-50 border-emerald-200 text-emerald-950'
-                }`}
-              >
-                <CheckCircle2
-                  className={`w-5 h-5 mt-0.5 shrink-0 ${
-                    isDark ? 'text-emerald-400' : 'text-emerald-600'
-                  }`}
-                />
-                <span>{item}</span>
-              </li>
-            ))}
-          </ul>
-        </section>
 
-        {/* Tips for School and Home */}
-        <section className="space-y-3">
-          <h2
-            className={`text-xl sm:text-2xl font-bold border-b-2 pb-1 m-0 flex items-center gap-2 ${
-              isDark
-                ? 'text-amber-400 border-amber-900/60'
-                : 'text-[#b45309] border-amber-200'
+          <div
+            className={`border-b my-2 ${
+              isDark ? 'border-emerald-800/50' : 'border-[#c8e6c9]'
             }`}
-          >
-            <Lightbulb className={`w-5 h-5 ${isDark ? 'text-amber-400' : 'text-amber-600'}`} />
-            <span>Astuces pratiques pour l'école et la maison 💡</span>
-          </h2>
-          <ul className="space-y-2 m-0 p-0 list-none">
-            {data.tipsForSchoolAndHome.map((item, idx) => (
-              <li
-                key={idx}
-                className={`flex items-start gap-3 p-3 rounded-lg border transition-colors ${
-                  isDark
-                    ? 'bg-amber-950/40 border-amber-800/60 text-amber-200'
-                    : 'bg-amber-50 border-amber-200 text-amber-950'
-                }`}
-              >
+          />
+
+          <ul className="space-y-2.5 m-0 p-0 list-none text-base sm:text-lg leading-relaxed">
+            {data.tips.bullets.map((b, idx) => (
+              <li key={idx} className="flex items-start gap-2.5">
                 <span
-                  className={`w-6 h-6 rounded-full text-xs font-bold flex items-center justify-center shrink-0 mt-0.5 ${
-                    isDark
-                      ? 'bg-amber-900 text-amber-200 border border-amber-700'
-                      : 'bg-amber-200 text-amber-800'
+                  className={`font-black select-none text-lg leading-normal ${
+                    isDark ? 'text-emerald-400' : 'text-[#2e7d32]'
                   }`}
                 >
-                  {idx + 1}
+                  •
                 </span>
-                <span>{item}</span>
+                <span>
+                  <strong className="font-bold">{b.title}</strong> : {b.text}
+                </span>
               </li>
             ))}
           </ul>
@@ -524,7 +557,7 @@ export const ThematicPage: React.FC<ThematicPageProps> = ({ pageId, onNavigate, 
 
         {/* Bottom Navigation */}
         <div
-          className={`pt-4 border-t-2 flex flex-wrap items-center justify-between gap-3 ${
+          className={`pt-4 border-t-2 flex items-center justify-between gap-3 ${
             isDark ? 'border-slate-800' : 'border-slate-200'
           }`}
         >
@@ -538,18 +571,6 @@ export const ThematicPage: React.FC<ThematicPageProps> = ({ pageId, onNavigate, 
             }`}
           >
             ← Retour à l'accueil
-          </button>
-          <button
-            type="button"
-            onClick={() => onNavigate('syllabodys')}
-            className={`px-4 py-2 rounded-lg font-bold text-sm sm:text-base cursor-pointer flex items-center gap-2 transition-colors ${
-              isDark
-                ? 'bg-sky-500 hover:bg-sky-400 text-slate-950 font-black'
-                : 'bg-[#005a9c] hover:bg-[#003d6b] text-white'
-            }`}
-          >
-            <BookOpen className="w-4 h-4" />
-            <span>Tester l'Atelier SyllaboDys</span>
           </button>
         </div>
       </main>
