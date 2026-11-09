@@ -6,6 +6,7 @@ import {
   computeReadingStats,
   groupTokensIntoLines,
 } from './syllabifier.ts';
+import { extractExactVisualLinesFromDOM } from './pdfExport.ts';
 
 test('French syllabifier splits basic V-CV words accurately', () => {
   assert.deepEqual(splitFrenchWordIntoSyllables('camarade'), ['ca', 'ma', 'ra', 'de']);
@@ -127,5 +128,41 @@ test('tokenizeAndSyllabifyText respects manual syllable and silent letter overri
     renardToken.syllables.map((s) => s.text),
     ['re', 'nar', 'd']
   );
+});
+
+test('extractExactVisualLinesFromDOM partitions tokens according to visual line positions', () => {
+  const text = 'Ce matin, le petit renard roux sort doucement de son terrier.';
+  const tokens = tokenizeAndSyllabifyText(text, 2, false, 'syllable');
+
+  // Words 0..7 on line 0 (top: 10px)
+  // Words 8..10 on line 1 (top: 58px)
+  const mockNodes: any[] = [];
+  tokens.filter((t) => t.type === 'word').forEach((tok) => {
+    const isLine1 = (tok.wordIndex ?? 0) >= 8;
+    mockNodes.push({
+      getAttribute: (attr: string) => (attr === 'data-word-index' ? String(tok.wordIndex) : null),
+      getBoundingClientRect: () => ({ top: isLine1 ? 58 : 10, bottom: isLine1 ? 98 : 50, width: 40, height: 40 }),
+    });
+  });
+
+  const mockContainer: any = {
+    getBoundingClientRect: () => ({ top: 0, left: 0, width: 800, height: 400 }),
+    querySelectorAll: () => mockNodes,
+  };
+
+  const origWindow = globalThis.window;
+  (globalThis as any).window = {
+    getComputedStyle: () => ({ fontSize: '24px' }),
+  };
+
+  const exactLines = extractExactVisualLinesFromDOM(mockContainer, tokens);
+
+  assert.equal(exactLines.length, 2);
+  assert.equal(exactLines[0].wordCount, 8); // Ce matin, le petit renard roux sort doucement
+  assert.equal(exactLines[0].cumulativeWordCount, 8);
+  assert.equal(exactLines[1].wordCount, 3); // de son terrier.
+  assert.equal(exactLines[1].cumulativeWordCount, 11);
+
+  (globalThis as any).window = origWindow;
 });
 

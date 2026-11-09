@@ -22,6 +22,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { WordEditorModal } from './WordEditorModal';
+import { ExactVisualLine, extractExactVisualLinesFromDOM } from '../utils/pdfExport';
 
 interface ReadingWorkspaceProps {
   theme: 'light' | 'dark';
@@ -41,7 +42,7 @@ interface ReadingWorkspaceProps {
   customSyllableColors: Record<string, string>;
   onApplyColorToSyllableIds: (syllableIds: string[], colorHex: string) => void;
   showSyllableArcs: boolean;
-  onExportPdf: () => void;
+  onExportPdf: (exactLines?: ExactVisualLine[]) => void;
   isExporting: boolean;
   sheetRef: React.RefObject<HTMLDivElement | null>;
   showLineWordCount: boolean;
@@ -234,6 +235,15 @@ export const ReadingWorkspace: React.FC<ReadingWorkspaceProps> = ({
     showSyllableArcs,
   ]);
 
+  const handleExportClick = () => {
+    const container = readingAreaRef.current;
+    let exactLines: ExactVisualLine[] | undefined = undefined;
+    if (container) {
+      exactLines = extractExactVisualLinesFromDOM(container, tokens);
+    }
+    onExportPdf(exactLines);
+  };
+
   return (
     <div className="flex-1 min-w-0 space-y-5">
       {/* Zone 1: Saisie et modification du texte (masquée à l'export PDF) */}
@@ -385,7 +395,7 @@ export const ReadingWorkspace: React.FC<ReadingWorkspaceProps> = ({
           <div className="flex items-center gap-3">
             <button
               type="button"
-              onClick={onExportPdf}
+              onClick={handleExportClick}
               disabled={isExporting || rawText.trim().length === 0}
               className="no-print inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-sky-600 hover:bg-sky-700 disabled:opacity-50 text-white text-xs font-semibold transition-colors whitespace-nowrap shrink-0 cursor-pointer shadow-xs"
             >

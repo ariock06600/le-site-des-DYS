@@ -18,7 +18,7 @@ import {
   ColorUnitMode,
   ManualWordOverrides,
 } from './utils/syllabifier';
-import { exportReadingSheetToPdf } from './utils/pdfExport';
+import { exportReadingSheetToPdf, ExactVisualLine } from './utils/pdfExport';
 import { BookOpen, CheckCircle2, Sparkles } from 'lucide-react';
 
 export default function App() {
@@ -245,13 +245,14 @@ export default function App() {
     });
   };
 
-  const handleExportPdf = async () => {
+  const handleExportPdf = async (exactLines?: ExactVisualLine[]) => {
     if (!tokens || tokens.length === 0) return;
     setIsExporting(true);
     try {
       await exportReadingSheetToPdf({
         documentTitle,
         tokens,
+        exactLines,
         fontFamily,
         fontSize,
         lineHeight,

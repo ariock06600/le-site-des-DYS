@@ -2,9 +2,18 @@ import { jsPDF } from 'jspdf';
 import { TokenNode, ColorUnitMode } from './syllabifier';
 import { FontFamilyOption, FONT_OPTIONS } from './palettes';
 
+export interface ExactVisualLine {
+  tokens: TokenNode[];
+  wordCount: number;
+  cumulativeWordCount: number;
+}
+
+export type PageLine = ExactVisualLine;
+
 export interface PdfExportOptions {
   documentTitle: string;
   tokens: TokenNode[];
+  exactLines?: ExactVisualLine[];
   fontFamily: FontFamilyOption;
   fontSize: number;
   lineHeight: number;
@@ -21,10 +30,86 @@ export interface PdfExportOptions {
   silentLetterColor: string;
 }
 
-interface PageLine {
-  tokens: TokenNode[];
-  wordCount: number;
-  cumulativeWordCount: number;
+/**
+ * Extracts exact visual lines as rendered on screen in the reading container.
+ * This guarantees 100% fidelity between the web UI word count badges and the PDF export.
+ */
+export function extractExactVisualLinesFromDOM(
+  container: HTMLElement,
+  tokens: TokenNode[]
+): ExactVisualLine[] {
+  if (!container || !tokens || tokens.length === 0) return [];
+
+  const wordNodes = Array.from(
+    container.querySelectorAll<HTMLElement>('[data-word-node="true"]')
+  );
+  if (wordNodes.length === 0) return [];
+
+  const containerRect = container.getBoundingClientRect();
+  const sampleFontSize =
+    parseFloat(window.getComputedStyle(container).fontSize) || 24;
+  const threshold = Math.max(7, sampleFontSize * 0.35);
+
+  const wordToLine = new Map<number, number>();
+  let currentLineIdx = 0;
+  let lastTop = -9999;
+
+  wordNodes.forEach((node) => {
+    const rect = node.getBoundingClientRect();
+    if (rect.width === 0 && rect.height === 0) return;
+    const relTop = rect.top - containerRect.top;
+
+    if (lastTop === -9999) {
+      lastTop = relTop;
+    } else if (Math.abs(relTop - lastTop) > threshold) {
+      currentLineIdx++;
+      lastTop = relTop;
+    }
+
+    const wIdxStr = node.getAttribute('data-word-index');
+    if (wIdxStr !== null) {
+      const wIdx = parseInt(wIdxStr, 10);
+      if (!isNaN(wIdx)) {
+        wordToLine.set(wIdx, currentLineIdx);
+      }
+    }
+  });
+
+  const totalLines = currentLineIdx + 1;
+  const lineTokens: TokenNode[][] = Array.from({ length: totalLines }, () => []);
+
+  let activeLine = 0;
+  for (let i = 0; i < tokens.length; i++) {
+    const token = tokens[i];
+    if (token.type === 'word') {
+      const assignedLine =
+        token.wordIndex !== undefined ? wordToLine.get(token.wordIndex) : undefined;
+      if (assignedLine !== undefined) {
+        activeLine = assignedLine;
+      }
+      lineTokens[activeLine].push(token);
+    } else if (token.type === 'separator') {
+      lineTokens[activeLine].push(token);
+    } else if (token.type === 'newline') {
+      // Line break handled by visual line assignment
+    }
+  }
+
+  let runningCumulative = 0;
+  const result: ExactVisualLine[] = [];
+
+  for (let l = 0; l < totalLines; l++) {
+    const toks = lineTokens[l];
+    const wCount = toks.filter((t) => t.type === 'word').length;
+    runningCumulative += wCount;
+    result.push({
+      tokens: toks,
+      wordCount: wCount,
+      cumulativeWordCount: runningCumulative,
+    });
+  }
+
+  return result;
 }
 
 /**
@@ -62,13 +147,8 @@ export async function exportReadingSheetToPdf(options: PdfExportOptions): Promis
   const usableTextWidth = canvasWidth - marginLeft - marginRight - gutterWidth;
 
   // Proportional scale factor between CSS pixel size on screen and A4 print canvas (1600px width)
-  // options.fontSize range is 16px to 44px (default 24px).
-  // Dynamically scales: 16px -> 30px, 24px -> 45px, 32px -> 60px, 44px -> 82px
   const canvasScale = 1.86;
-  const canvasFontSize = Math.round(options.fontSize * canvasScale);
-
-  // Line height is directly proportional to font size and options.lineHeight (1.4x to 3.2x)
-  const lineHeightPx = Math.round(canvasFontSize * options.lineHeight);
+  let effectiveFontSize = Math.round(options.fontSize * canvasScale);
 
   // Setup helper canvas for font measurement
   const measureCanvas = document.createElement('canvas');
@@ -78,37 +158,18 @@ export async function exportReadingSheetToPdf(options: PdfExportOptions): Promis
   if (!mctx) throw new Error('Impossible de créer le contexte 2D');
 
   const cssFontFamily = fontObj.cssFamily || 'Plus Jakarta Sans, sans-serif';
-  const textFont = `${canvasFontSize}px ${cssFontFamily}`;
+  let textFont = `${effectiveFontSize}px ${cssFontFamily}`;
   mctx.font = textFont;
 
   // Apply letter-spacing and word-spacing to canvas context when supported
-  const letterSpacingPx = `${(options.letterSpacing * canvasFontSize).toFixed(1)}px`;
-  const wordSpacingPx = `${(options.wordSpacing * canvasFontSize).toFixed(1)}px`;
+  const letterSpacingPx = `${(options.letterSpacing * effectiveFontSize).toFixed(1)}px`;
+  const wordSpacingPx = `${(options.wordSpacing * effectiveFontSize).toFixed(1)}px`;
   if ('letterSpacing' in mctx) {
     (mctx as unknown as { letterSpacing: string }).letterSpacing = letterSpacingPx;
   }
   if ('wordSpacing' in mctx) {
     (mctx as unknown as { wordSpacing: string }).wordSpacing = wordSpacingPx;
   }
-
-  // Group tokens into visual wrapped lines using accurate text measurement
-  const lines: PageLine[] = [];
-  let currentLineTokens: TokenNode[] = [];
-  let currentLineWidth = 0;
-  let currentLineWords = 0;
-  let runningCumulative = 0;
-
-  const pushCurrentLine = () => {
-    runningCumulative += currentLineWords;
-    lines.push({
-      tokens: [...currentLineTokens],
-      wordCount: currentLineWords,
-      cumulativeWordCount: runningCumulative,
-    });
-    currentLineTokens = [];
-    currentLineWidth = 0;
-    currentLineWords = 0;
-  };
 
   const measureTokenWidth = (token: TokenNode): number => {
     if (token.type === 'newline') return 0;
@@ -128,28 +189,74 @@ export async function exportReadingSheetToPdf(options: PdfExportOptions): Promis
     return w;
   };
 
-  for (const token of options.tokens) {
-    if (token.type === 'newline') {
-      pushCurrentLine();
-      continue;
+  let lines: ExactVisualLine[];
+
+  if (options.exactLines && options.exactLines.length > 0) {
+    // 100% fidelity: use lines directly extracted from the screen DOM
+    lines = options.exactLines;
+
+    // Verify widest line fits within usableTextWidth; scale down effectiveFontSize if needed
+    let maxLineWidth = 0;
+    for (const line of lines) {
+      let lw = 0;
+      for (const tok of line.tokens) {
+        lw += measureTokenWidth(tok);
+      }
+      if (lw > maxLineWidth) maxLineWidth = lw;
     }
 
-    const tWidth = measureTokenWidth(token);
+    if (maxLineWidth > usableTextWidth && maxLineWidth > 0) {
+      const fitFactor = usableTextWidth / (maxLineWidth + 16);
+      effectiveFontSize = Math.max(16, Math.floor(effectiveFontSize * fitFactor));
+      textFont = `${effectiveFontSize}px ${cssFontFamily}`;
+      mctx.font = textFont;
+    }
+  } else {
+    // Fallback: Group tokens into visual wrapped lines using accurate text measurement
+    lines = [];
+    let currentLineTokens: TokenNode[] = [];
+    let currentLineWidth = 0;
+    let currentLineWords = 0;
+    let runningCumulative = 0;
 
-    if (currentLineWidth + tWidth > usableTextWidth && currentLineTokens.length > 0) {
-      pushCurrentLine();
+    const pushCurrentLine = () => {
+      runningCumulative += currentLineWords;
+      lines.push({
+        tokens: [...currentLineTokens],
+        wordCount: currentLineWords,
+        cumulativeWordCount: runningCumulative,
+      });
+      currentLineTokens = [];
+      currentLineWidth = 0;
+      currentLineWords = 0;
+    };
+
+    for (const token of options.tokens) {
+      if (token.type === 'newline') {
+        pushCurrentLine();
+        continue;
+      }
+
+      const tWidth = measureTokenWidth(token);
+
+      if (currentLineWidth + tWidth > usableTextWidth && currentLineTokens.length > 0) {
+        pushCurrentLine();
+      }
+
+      currentLineTokens.push(token);
+      currentLineWidth += tWidth;
+      if (token.type === 'word') {
+        currentLineWords++;
+      }
     }
 
-    currentLineTokens.push(token);
-    currentLineWidth += tWidth;
-    if (token.type === 'word') {
-      currentLineWords++;
+    if (currentLineTokens.length > 0 || lines.length === 0) {
+      pushCurrentLine();
     }
   }
 
-  if (currentLineTokens.length > 0 || lines.length === 0) {
-    pushCurrentLine();
-  }
+  // Line height is directly proportional to effective font size and options.lineHeight
+  const lineHeightPx = Math.round(effectiveFontSize * options.lineHeight);
 
   // Calculate lines per page based on current font size and line height
   const headerHeight = options.documentTitle.trim() ? 140 : 40;
@@ -210,7 +317,7 @@ export async function exportReadingSheetToPdf(options: PdfExportOptions): Promis
 
     // Draw lines for this page
     const pageLines = lines.slice(pageIdx * linesPerPage, (pageIdx + 1) * linesPerPage);
-    let currentY = startY + canvasFontSize;
+    let currentY = startY + effectiveFontSize;
 
     for (const line of pageLines) {
       let currentX = marginLeft;
@@ -264,14 +371,14 @@ export async function exportReadingSheetToPdf(options: PdfExportOptions): Promis
           // Draw syllable arc under syllable if enabled
           if (options.showSyllableArcs) {
             const arcWidth = sylEndX - sylStartX;
-            const arcY = currentY + Math.max(5, Math.round(canvasFontSize * 0.15));
+            const arcY = currentY + Math.max(5, Math.round(effectiveFontSize * 0.15));
             ctx.strokeStyle = hexColor;
-            ctx.lineWidth = Math.max(2, Math.round(canvasFontSize * 0.055));
+            ctx.lineWidth = Math.max(2, Math.round(effectiveFontSize * 0.055));
             ctx.beginPath();
             ctx.moveTo(sylStartX + 2, arcY);
             ctx.quadraticCurveTo(
               sylStartX + arcWidth / 2,
-              arcY + Math.max(6, Math.round(canvasFontSize * 0.15)),
+              arcY + Math.max(6, Math.round(effectiveFontSize * 0.15)),
               sylEndX - 2,
               arcY
             );
@@ -289,7 +396,7 @@ export async function exportReadingSheetToPdf(options: PdfExportOptions): Promis
             ? `${line.cumulativeWordCount}`
             : `${line.wordCount} · ${line.cumulativeWordCount}`;
 
-        const badgeFontSize = Math.max(16, Math.round(canvasFontSize * 0.42));
+        const badgeFontSize = Math.max(16, Math.round(effectiveFontSize * 0.42));
         ctx.font = `bold ${badgeFontSize}px monospace`;
         if ('letterSpacing' in ctx) {
           (ctx as unknown as { letterSpacing: string }).letterSpacing = '0px';
@@ -301,9 +408,9 @@ export async function exportReadingSheetToPdf(options: PdfExportOptions): Promis
         const badgeMetrics = ctx.measureText(badgeText);
         const badgePaddingX = Math.round(badgeFontSize * 0.7);
         const badgeWidth = Math.max(48, Math.round(badgeMetrics.width + badgePaddingX * 2));
-        const badgeHeight = Math.max(28, Math.round(canvasFontSize * 0.68));
+        const badgeHeight = Math.max(28, Math.round(effectiveFontSize * 0.68));
         const badgeX = canvasWidth - marginRight - badgeWidth;
-        const badgeY = Math.round(currentY - canvasFontSize * 0.82 + (lineHeightPx - badgeHeight) / 2);
+        const badgeY = Math.round(currentY - effectiveFontSize * 0.35 - badgeHeight / 2);
 
         // Rounded badge background
         const radius = 6;
