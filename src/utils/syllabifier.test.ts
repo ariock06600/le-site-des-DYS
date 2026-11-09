@@ -100,3 +100,32 @@ test('silent letters are detected in syllables', () => {
   assert.ok(silentPartVolent);
   assert.equal(silentPartVolent.text, 'ent');
 });
+
+test('tokenizeAndSyllabifyText respects manual syllable and silent letter overrides', () => {
+  const text = 'Ce petit renard.';
+  // Override syllables of renard (wordIndex 2) to 3 syllables ['re', 'nar', 'd']
+  // Override silent letter of petit (wordIndex 1) so no letters are silent
+  const overrides = {
+    wordIndexSyllables: {
+      2: ['re', 'nar', 'd'],
+    },
+    wordIndexSilentLetters: {
+      1: [false, false, false, false, false], // 'petit' with NO silent letter
+    },
+  };
+
+  const tokens = tokenizeAndSyllabifyText(text, 2, false, 'syllable', overrides);
+  const petitToken = tokens.find((t) => t.raw === 'petit')!;
+  assert.equal(petitToken.isCustomSilentLetters, true);
+  // In petit, 't' should now NOT be silent
+  const petitParts = petitToken.syllables.flatMap((s) => s.parts);
+  assert.equal(petitParts.some((p) => p.isSilent), false);
+
+  const renardToken = tokens.find((t) => t.raw === 'renard')!;
+  assert.equal(renardToken.isCustomSyllables, true);
+  assert.deepEqual(
+    renardToken.syllables.map((s) => s.text),
+    ['re', 'nar', 'd']
+  );
+});
+

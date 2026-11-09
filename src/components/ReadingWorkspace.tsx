@@ -17,7 +17,11 @@ import {
   FileDown,
   BookOpen,
   RefreshCw,
+  Scissors,
+  Palette as PaletteIcon,
+  Sparkles,
 } from 'lucide-react';
+import { WordEditorModal } from './WordEditorModal';
 
 interface ReadingWorkspaceProps {
   theme: 'light' | 'dark';
@@ -44,6 +48,14 @@ interface ReadingWorkspaceProps {
   lineWordCountMode: 'cumulative' | 'line' | 'both';
   showSilentLetters: boolean;
   silentLetterColor: string;
+  onSaveWordOverrides?: (data: {
+    wordIndex: number;
+    wordText: string;
+    syllables: string[];
+    silentFlags: boolean[];
+    applyToAllOccurrences: boolean;
+  }) => void;
+  onResetWordOverrides?: (wordIndex: number, wordText: string) => void;
 }
 
 interface VisualLineInfo {
@@ -80,9 +92,19 @@ export const ReadingWorkspace: React.FC<ReadingWorkspaceProps> = ({
   lineWordCountMode,
   showSilentLetters,
   silentLetterColor,
+  onSaveWordOverrides,
+  onResetWordOverrides,
 }) => {
   const isDark = theme === 'dark';
   const readingAreaRef = useRef<HTMLDivElement | null>(null);
+  const [activeToolMode, setActiveToolMode] = useState<'color' | 'edit'>('color');
+  const [editingWord, setEditingWord] = useState<{
+    wordIndex: number;
+    wordText: string;
+    syllables: string[];
+    silentFlags: boolean[];
+    isCustom: boolean;
+  } | null>(null);
 
   const fontObj = FONT_OPTIONS.find((f) => f.id === fontFamily) || FONT_OPTIONS[0];
   const stats = computeReadingStats(tokens);
@@ -373,6 +395,62 @@ export const ReadingWorkspace: React.FC<ReadingWorkspaceProps> = ({
           </div>
         </div>
 
+        {/* Barre d'outils interactive : Choix entre Mode Coloration et Mode Découpage Syllabes & Lettres */}
+        <div
+          className={`no-print mb-5 p-3 rounded-xl border flex flex-wrap items-center justify-between gap-3 text-xs ${
+            isDark ? 'bg-slate-950/80 border-slate-800' : 'bg-slate-50 border-slate-200'
+          }`}
+        >
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className={`font-semibold ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+              Mode d'action sur la fiche :
+            </span>
+            <div className="inline-flex rounded-lg p-0.5 border border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xs">
+              <button
+                type="button"
+                onClick={() => setActiveToolMode('color')}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md font-semibold transition-colors cursor-pointer ${
+                  activeToolMode === 'color'
+                    ? 'bg-sky-600 text-white shadow-xs'
+                    : isDark
+                    ? 'text-slate-400 hover:text-slate-200'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <PaletteIcon className="w-3.5 h-3.5" />
+                <span>Alterner les couleurs</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveToolMode('edit')}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md font-semibold transition-colors cursor-pointer ${
+                  activeToolMode === 'edit'
+                    ? 'bg-sky-600 text-white shadow-xs'
+                    : isDark
+                    ? 'text-slate-400 hover:text-slate-200'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <Scissors className="w-3.5 h-3.5" />
+                <span>Modifier syllabes & lettres</span>
+              </button>
+            </div>
+          </div>
+
+          <div className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+            {activeToolMode === 'edit' ? (
+              <span className="text-sky-400 font-medium flex items-center gap-1">
+                <Scissors className="w-3.5 h-3.5" />
+                <span>Cliquez sur n'importe quel mot ci-dessous pour couper ses syllabes ou basculer ses lettres muettes.</span>
+              </span>
+            ) : (
+              <span>
+                💡 Cliquez sur une syllabe pour alterner sa couleur · <strong className="text-sky-400 font-medium">Double-cliquez</strong> sur un mot pour l'éditer.
+              </span>
+            )}
+          </div>
+        </div>
+
         {/* Zone de lecture interactive */}
         {rawText.trim().length === 0 ? (
           <div className="py-12 text-center space-y-3">
@@ -424,12 +502,50 @@ export const ReadingWorkspace: React.FC<ReadingWorkspaceProps> = ({
                   );
                 }
 
+                const isWordCustom = Boolean(token.isCustomSyllables || token.isCustomSilentLetters);
+
+                const handleOpenWordEditor = (e: React.MouseEvent) => {
+                  e.stopPropagation();
+                  const currentSyllables = token.syllables.map((s) => s.text);
+                  const currentSilentFlags = token.syllables.flatMap((s) =>
+                    s.parts && s.parts.length > 0
+                      ? s.parts.flatMap((p) => new Array(p.text.length).fill(p.isSilent))
+                      : new Array(s.text.length).fill(false)
+                  );
+                  setEditingWord({
+                    wordIndex: token.wordIndex ?? 0,
+                    wordText: token.raw,
+                    syllables: currentSyllables,
+                    silentFlags: currentSilentFlags,
+                    isCustom: isWordCustom,
+                  });
+                };
+
                 return (
                   <span
                     key={token.id}
                     data-word-node="true"
                     data-word-index={token.wordIndex}
-                    className="inline-block"
+                    onClick={(e) => {
+                      if (activeToolMode === 'edit') {
+                        handleOpenWordEditor(e);
+                      }
+                    }}
+                    onDoubleClick={handleOpenWordEditor}
+                    title={
+                      activeToolMode === 'edit'
+                        ? `Cliquer pour modifier les syllabes ou lettres muettes de « ${token.raw} »`
+                        : isWordCustom
+                        ? `Mot personnalisé · Double-cliquez pour modifier « ${token.raw} »`
+                        : `Double-cliquez pour modifier « ${token.raw} »`
+                    }
+                    className={`inline-block relative rounded transition-all ${
+                      activeToolMode === 'edit'
+                        ? 'cursor-pointer hover:ring-2 hover:ring-sky-500 hover:bg-sky-500/10 px-0.5'
+                        : isWordCustom
+                        ? 'ring-1 ring-sky-500/40 rounded px-0.5'
+                        : ''
+                    }`}
                   >
                     {token.syllables.map((syl) => {
                       const defaultHex = colors[syl.defaultColorIndex % colorCount] || colors[0];
@@ -441,8 +557,16 @@ export const ReadingWorkspace: React.FC<ReadingWorkspaceProps> = ({
                           data-syllable-id={syl.id}
                           data-word-index={syl.wordIndex}
                           data-sentence-index={syl.sentenceIndex}
-                          title="Cliquez pour alterner la couleur"
+                          title={
+                            activeToolMode === 'edit'
+                              ? `Cliquer pour modifier « ${token.raw} »`
+                              : 'Cliquez pour alterner la couleur · Double-cliquez pour modifier le mot'
+                          }
                           onClick={(e) => {
+                            if (activeToolMode === 'edit') {
+                              handleOpenWordEditor(e);
+                              return;
+                            }
                             const sel = window.getSelection();
                             if (sel && !sel.isCollapsed && sel.toString().trim().length > 0) {
                               return;
@@ -467,7 +591,9 @@ export const ReadingWorkspace: React.FC<ReadingWorkspaceProps> = ({
                             paddingBottom: showSyllableArcs ? '2px' : undefined,
                             marginRight: showSyllableArcs ? '1px' : undefined,
                           }}
-                          className="rounded-xs transition-colors cursor-pointer hover:bg-sky-500/15"
+                          className={`rounded-xs transition-colors ${
+                            activeToolMode === 'color' ? 'cursor-pointer hover:bg-sky-500/15' : ''
+                          }`}
                         >
                           {showSilentLetters && syl.parts && syl.parts.length > 0 ? (
                             syl.parts.map((part, pIdx) => (
@@ -488,6 +614,15 @@ export const ReadingWorkspace: React.FC<ReadingWorkspaceProps> = ({
                         </span>
                       );
                     })}
+
+                    {/* Subtle dot indicator when word has custom manual overrides */}
+                    {isWordCustom && (
+                      <span
+                        aria-hidden="true"
+                        title="Ce mot a des coupures ou lettres muettes personnalisées"
+                        className="no-print absolute -top-1.5 -right-1 w-2 h-2 rounded-full bg-sky-500 ring-2 ring-white dark:ring-slate-900"
+                      />
+                    )}
                   </span>
                 );
               })}
@@ -531,6 +666,30 @@ export const ReadingWorkspace: React.FC<ReadingWorkspaceProps> = ({
           </div>
         )}
       </div>
+
+      {/* Word Editor Modal for manual syllable cuts and silent letters */}
+      {editingWord && (
+        <WordEditorModal
+          isOpen={editingWord !== null}
+          onClose={() => setEditingWord(null)}
+          wordIndex={editingWord.wordIndex}
+          wordText={editingWord.wordText}
+          initialSyllables={editingWord.syllables}
+          initialSilentFlags={editingWord.silentFlags}
+          isCustom={editingWord.isCustom}
+          theme={theme}
+          onSave={(data) => {
+            if (onSaveWordOverrides) {
+              onSaveWordOverrides(data);
+            }
+          }}
+          onResetWord={(wIdx, wText) => {
+            if (onResetWordOverrides) {
+              onResetWordOverrides(wIdx, wText);
+            }
+          }}
+        />
+      )}
     </div>
   );
 };

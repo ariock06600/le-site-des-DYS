@@ -33,6 +33,15 @@ export interface TokenNode {
   wordIndex?: number;
   sentenceIndex: number;
   defaultColorIndex: number;
+  isCustomSyllables?: boolean;
+  isCustomSilentLetters?: boolean;
+}
+
+export interface ManualWordOverrides {
+  wordIndexSyllables?: Record<number, string[]>;
+  wordIndexSilentLetters?: Record<number, boolean[]>;
+  globalWordSyllables?: Record<string, string[]>;
+  globalWordSilentLetters?: Record<string, boolean[]>;
 }
 
 const VOWELS = 'aeiouyàâäéèêëîïôöùûüÿœæAEIOUYÀÂÄÉÈÊËÎÏÔÖÙÛÜŸŒÆ';
@@ -204,14 +213,42 @@ export function splitFrenchWordIntoSyllables(word: string): string[] {
 }
 
 /**
+ * Parses user-entered syllables from a string with '/' or '-' delimiters.
+ * E.g. "re/nard" or "re-nard" -> ["re", "nard"]
+ * Validates that joining the parts reconstitutes the original characters.
+ */
+export function parseSyllablesFromSlashString(rawWord: string, slashString: string): string[] {
+  if (!slashString || !slashString.trim()) {
+    return splitFrenchWordIntoSyllables(rawWord);
+  }
+  const cleanParts = slashString
+    .split(/[\/|·•\-]+/)
+    .map((p) => p.trim())
+    .filter((p) => p.length > 0);
+
+  if (cleanParts.length === 0) {
+    return [rawWord];
+  }
+
+  // Verify that all characters are preserved
+  const joined = cleanParts.join('');
+  if (joined.toLowerCase() === rawWord.replace(/[\/|\-]/g, '').toLowerCase()) {
+    return cleanParts;
+  }
+  return cleanParts;
+}
+
+/**
  * Tokenizes full French text into words, syllables, spaces, and newlines.
- * Supports automatic color alternation by 'syllable', 'word', or 'sentence'.
+ * Supports automatic color alternation by 'syllable', 'word', or 'sentence',
+ * as well as custom manual overrides for syllables and silent letters.
  */
 export function tokenizeAndSyllabifyText(
   text: string,
   colorCount: number,
   resetColorPerWord: boolean = false,
-  unitMode: ColorUnitMode = 'syllable'
+  unitMode: ColorUnitMode = 'syllable',
+  manualOverrides?: ManualWordOverrides
 ): TokenNode[] {
   if (!text) return [];
 
@@ -233,9 +270,36 @@ export function tokenizeAndSyllabifyText(
     if (wordMatch) {
       const currentWordIndex = wordCounter;
       const currentSentenceIndex = sentenceCounter;
+      const lowerWord = wordMatch.toLowerCase();
 
-      const syllableStrings = splitFrenchWordIntoSyllables(wordMatch);
-      const silentFlags = identifySilentLetterIndices(wordMatch);
+      // Check for manual syllable overrides
+      let syllableStrings: string[] | undefined =
+        manualOverrides?.wordIndexSyllables?.[currentWordIndex];
+      let hasCustomSyllables = Boolean(syllableStrings);
+
+      if (!syllableStrings && manualOverrides?.globalWordSyllables) {
+        syllableStrings = manualOverrides.globalWordSyllables[lowerWord];
+        if (syllableStrings) hasCustomSyllables = true;
+      }
+
+      if (!syllableStrings || syllableStrings.length === 0) {
+        syllableStrings = splitFrenchWordIntoSyllables(wordMatch);
+      }
+
+      // Check for manual silent letter overrides
+      let silentFlags: boolean[] | undefined =
+        manualOverrides?.wordIndexSilentLetters?.[currentWordIndex];
+      let hasCustomSilentLetters = Boolean(silentFlags);
+
+      if (!silentFlags && manualOverrides?.globalWordSilentLetters) {
+        silentFlags = manualOverrides.globalWordSilentLetters[lowerWord];
+        if (silentFlags) hasCustomSilentLetters = true;
+      }
+
+      if (!silentFlags || silentFlags.length !== wordMatch.length) {
+        silentFlags = identifySilentLetterIndices(wordMatch);
+      }
+
       let wordSyllableCounter = 0;
       let charOffsetInWord = 0;
 
@@ -255,7 +319,7 @@ export function tokenizeAndSyllabifyText(
         const colorIdx = computeColorIndex(wordSyllableCounter, globalSyllableCounter);
         wordSyllableCounter++;
         globalSyllableCounter++;
-        const parts = buildSyllableCharParts(sylText, charOffsetInWord, silentFlags);
+        const parts = buildSyllableCharParts(sylText, charOffsetInWord, silentFlags!);
         charOffsetInWord += sylText.length;
         return {
           id: `${nodeId}-syl-${sIdx}`,
@@ -275,6 +339,8 @@ export function tokenizeAndSyllabifyText(
         wordIndex: currentWordIndex,
         sentenceIndex: currentSentenceIndex,
         defaultColorIndex: syllables[0]?.defaultColorIndex ?? 0,
+        isCustomSyllables: hasCustomSyllables,
+        isCustomSilentLetters: hasCustomSilentLetters,
       });
 
       wordCounter++;

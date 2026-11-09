@@ -12,7 +12,12 @@ import {
   FontFamilyOption,
   FONT_OPTIONS,
 } from './utils/palettes';
-import { tokenizeAndSyllabifyText, groupTokensIntoLines, ColorUnitMode } from './utils/syllabifier';
+import {
+  tokenizeAndSyllabifyText,
+  groupTokensIntoLines,
+  ColorUnitMode,
+  ManualWordOverrides,
+} from './utils/syllabifier';
 import { exportReadingSheetToPdf } from './utils/pdfExport';
 import { BookOpen, CheckCircle2, Sparkles } from 'lucide-react';
 
@@ -80,6 +85,14 @@ export default function App() {
   const [showSilentLetters, setShowSilentLetters] = useState<boolean>(true);
   const [silentLetterColor, setSilentLetterColor] = useState<string>('#94A3B8');
 
+  // Manual word overrides (syllables cuts & silent letters per word)
+  const [manualWordOverrides, setManualWordOverrides] = useState<ManualWordOverrides>({
+    wordIndexSyllables: {},
+    wordIndexSilentLetters: {},
+    globalWordSyllables: {},
+    globalWordSilentLetters: {},
+  });
+
   // Manual color overrides mapped by syllable ID -> hex string
   const [customSyllableColors, setCustomSyllableColors] = useState<Record<string, string>>({});
   const [isExporting, setIsExporting] = useState<boolean>(false);
@@ -89,8 +102,15 @@ export default function App() {
   const activeColors = theme === 'dark' ? darkColors : lightColors;
 
   const tokens = useMemo(
-    () => tokenizeAndSyllabifyText(rawText, colorCount, resetColorPerWord, unitMode),
-    [rawText, colorCount, resetColorPerWord, unitMode]
+    () =>
+      tokenizeAndSyllabifyText(
+        rawText,
+        colorCount,
+        resetColorPerWord,
+        unitMode,
+        manualWordOverrides
+      ),
+    [rawText, colorCount, resetColorPerWord, unitMode, manualWordOverrides]
   );
 
   const handleToggleTheme = () => {
@@ -133,6 +153,71 @@ export default function App() {
     });
   };
 
+  const handleSaveWordOverrides = (data: {
+    wordIndex: number;
+    wordText: string;
+    syllables: string[];
+    silentFlags: boolean[];
+    applyToAllOccurrences: boolean;
+  }) => {
+    const lower = data.wordText.toLowerCase();
+    setManualWordOverrides((prev) => {
+      const next: ManualWordOverrides = {
+        wordIndexSyllables: { ...prev.wordIndexSyllables },
+        wordIndexSilentLetters: { ...prev.wordIndexSilentLetters },
+        globalWordSyllables: { ...prev.globalWordSyllables },
+        globalWordSilentLetters: { ...prev.globalWordSilentLetters },
+      };
+
+      if (data.applyToAllOccurrences) {
+        if (!next.globalWordSyllables) next.globalWordSyllables = {};
+        if (!next.globalWordSilentLetters) next.globalWordSilentLetters = {};
+        next.globalWordSyllables[lower] = data.syllables;
+        next.globalWordSilentLetters[lower] = data.silentFlags;
+      } else {
+        if (!next.wordIndexSyllables) next.wordIndexSyllables = {};
+        if (!next.wordIndexSilentLetters) next.wordIndexSilentLetters = {};
+        next.wordIndexSyllables[data.wordIndex] = data.syllables;
+        next.wordIndexSilentLetters[data.wordIndex] = data.silentFlags;
+      }
+      return next;
+    });
+  };
+
+  const handleResetWordOverrides = (wordIndex: number, wordText: string) => {
+    const lower = wordText.toLowerCase();
+    setManualWordOverrides((prev) => {
+      const next: ManualWordOverrides = {
+        wordIndexSyllables: { ...prev.wordIndexSyllables },
+        wordIndexSilentLetters: { ...prev.wordIndexSilentLetters },
+        globalWordSyllables: { ...prev.globalWordSyllables },
+        globalWordSilentLetters: { ...prev.globalWordSilentLetters },
+      };
+      if (next.wordIndexSyllables) delete next.wordIndexSyllables[wordIndex];
+      if (next.wordIndexSilentLetters) delete next.wordIndexSilentLetters[wordIndex];
+      if (next.globalWordSyllables) delete next.globalWordSyllables[lower];
+      if (next.globalWordSilentLetters) delete next.globalWordSilentLetters[lower];
+      return next;
+    });
+  };
+
+  const handleResetAllManualWordOverrides = () => {
+    setManualWordOverrides({
+      wordIndexSyllables: {},
+      wordIndexSilentLetters: {},
+      globalWordSyllables: {},
+      globalWordSilentLetters: {},
+    });
+  };
+
+  const totalManualWordCustomizations = useMemo(() => {
+    const idxSyl = Object.keys(manualWordOverrides.wordIndexSyllables || {}).length;
+    const idxSil = Object.keys(manualWordOverrides.wordIndexSilentLetters || {}).length;
+    const globSyl = Object.keys(manualWordOverrides.globalWordSyllables || {}).length;
+    const globSil = Object.keys(manualWordOverrides.globalWordSilentLetters || {}).length;
+    return Math.max(idxSyl, idxSil) + Math.max(globSyl, globSil);
+  }, [manualWordOverrides]);
+
   const handleResetAll = () => {
     setTheme('dark');
     setFontFamily('opendyslexic');
@@ -152,6 +237,12 @@ export default function App() {
     setShowSilentLetters(true);
     setSilentLetterColor('#94A3B8');
     setCustomSyllableColors({});
+    setManualWordOverrides({
+      wordIndexSyllables: {},
+      wordIndexSilentLetters: {},
+      globalWordSyllables: {},
+      globalWordSilentLetters: {},
+    });
   };
 
   const handleExportPdf = async () => {
@@ -415,6 +506,8 @@ export default function App() {
                 onSetShowSilentLetters={setShowSilentLetters}
                 silentLetterColor={silentLetterColor}
                 onSetSilentLetterColor={setSilentLetterColor}
+                manualWordCustomizationsCount={totalManualWordCustomizations}
+                onClearAllManualWordCustomizations={handleResetAllManualWordOverrides}
               />
 
               <ReadingWorkspace
@@ -445,6 +538,8 @@ export default function App() {
                 lineWordCountMode={lineWordCountMode}
                 showSilentLetters={showSilentLetters}
                 silentLetterColor={silentLetterColor}
+                onSaveWordOverrides={handleSaveWordOverrides}
+                onResetWordOverrides={handleResetWordOverrides}
               />
             </div>
           </main>

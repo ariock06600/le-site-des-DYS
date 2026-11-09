@@ -6,7 +6,7 @@ import {
   PalettePreset,
 } from '../utils/palettes';
 import { ColorUnitMode } from '../utils/syllabifier';
-import { Sun, Moon, Type, Palette, Sliders, Sparkles, RotateCcw, Layers, Hash, EyeOff } from 'lucide-react';
+import { Sun, Moon, Type, Palette, Sliders, Sparkles, RotateCcw, Layers, Hash, EyeOff, Scissors } from 'lucide-react';
 
 interface ControlPanelProps {
   theme: 'light' | 'dark';
@@ -43,6 +43,8 @@ interface ControlPanelProps {
   onSetShowSilentLetters: (val: boolean) => void;
   silentLetterColor: string;
   onSetSilentLetterColor: (color: string) => void;
+  manualWordCustomizationsCount?: number;
+  onClearAllManualWordCustomizations?: () => void;
 }
 
 const UNIT_MODE_OPTIONS: { id: ColorUnitMode; label: string; desc: string }[] = [
@@ -86,6 +88,8 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
   onSetShowSilentLetters,
   silentLetterColor,
   onSetSilentLetterColor,
+  manualWordCustomizationsCount = 0,
+  onClearAllManualWordCustomizations,
 }) => {
   const isDark = theme === 'dark';
 
@@ -717,6 +721,38 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
             </div>
           )}
         </div>
+      </section>
+
+      <hr className={`border-t ${isDark ? 'border-slate-800' : 'border-slate-200'}`} />
+
+      {/* Section 6: Modifications manuelles (Syllabes & Lettres muettes) */}
+      <section aria-labelledby="heading-manual-edits" className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 id="heading-manual-edits" className="text-xs font-bold uppercase tracking-wider flex items-center gap-2">
+            <Scissors className="w-3.5 h-3.5 text-sky-500" />
+            <span>6. Syllabes & Lettres manuelles</span>
+          </h2>
+          {manualWordCustomizationsCount > 0 && (
+            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/20">
+              {manualWordCustomizationsCount} mot{manualWordCustomizationsCount > 1 ? 's' : ''} modifié{manualWordCustomizationsCount > 1 ? 's' : ''}
+            </span>
+          )}
+        </div>
+
+        <p className={`text-[11px] leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+          Vous pouvez ajuster manuellement le découpage syllabique et choisir quelles lettres sont muettes en cliquant directement sur n'importe quel mot de la feuille de lecture.
+        </p>
+
+        {manualWordCustomizationsCount > 0 && onClearAllManualWordCustomizations && (
+          <button
+            type="button"
+            onClick={onClearAllManualWordCustomizations}
+            className="w-full py-1.5 px-3 rounded-lg border border-slate-700 hover:border-rose-500/50 hover:bg-rose-500/10 text-rose-400 text-xs font-medium transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+          >
+            <RotateCcw className="w-3 h-3" />
+            <span>Réinitialiser les mots personnalisés ({manualWordCustomizationsCount})</span>
+          </button>
+        )}
       </section>
     </aside>
   );
