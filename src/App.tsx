@@ -12,20 +12,9 @@ import {
   FontFamilyOption,
   FONT_OPTIONS,
 } from './utils/palettes';
-import { tokenizeAndSyllabifyText, ColorUnitMode } from './utils/syllabifier';
+import { tokenizeAndSyllabifyText, groupTokensIntoLines, ColorUnitMode } from './utils/syllabifier';
+import { exportReadingSheetToPdf } from './utils/pdfExport';
 import { BookOpen, CheckCircle2, Sparkles } from 'lucide-react';
-
-declare global {
-  interface Window {
-    html2pdf?: () => {
-      set: (opt: Record<string, unknown>) => {
-        from: (el: HTMLElement) => {
-          save: () => Promise<void>;
-        };
-      };
-    };
-  }
-}
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState<SuperPageId>('accueil');
@@ -84,6 +73,12 @@ export default function App() {
   const [darkColors, setDarkColors] = useState<string[]>([...PALETTE_PRESETS[0].darkColors]);
   const [resetColorPerWord, setResetColorPerWord] = useState<boolean>(false);
   const [showSyllableArcs, setShowSyllableArcs] = useState<boolean>(false);
+
+  // Line word count & Silent letters aids
+  const [showLineWordCount, setShowLineWordCount] = useState<boolean>(true);
+  const [lineWordCountMode, setLineWordCountMode] = useState<'cumulative' | 'line' | 'both'>('cumulative');
+  const [showSilentLetters, setShowSilentLetters] = useState<boolean>(true);
+  const [silentLetterColor, setSilentLetterColor] = useState<string>('#94A3B8');
 
   // Manual color overrides mapped by syllable ID -> hex string
   const [customSyllableColors, setCustomSyllableColors] = useState<Record<string, string>>({});
@@ -152,155 +147,40 @@ export default function App() {
     setDarkColors([...PALETTE_PRESETS[0].darkColors]);
     setResetColorPerWord(false);
     setShowSyllableArcs(false);
+    setShowLineWordCount(true);
+    setLineWordCountMode('cumulative');
+    setShowSilentLetters(true);
+    setSilentLetterColor('#94A3B8');
     setCustomSyllableColors({});
   };
 
   const handleExportPdf = async () => {
-    const readingAreaEl = document.getElementById('syllable-reading-area');
-    if (!readingAreaEl) return;
-
+    if (!tokens || tokens.length === 0) return;
     setIsExporting(true);
-    let tempWrapper: HTMLDivElement | null = null;
-
     try {
-      const safeFilename =
-        (documentTitle || 'lecture-syllabique')
-          .toLowerCase()
-          .replace(/[^a-z0-9à-ÿ]+/gi, '-')
-          .replace(/^-|-$/g, '') + '.pdf';
-
-      const fontObj = FONT_OPTIONS.find((f) => f.id === fontFamily) || FONT_OPTIONS[0];
-      // Always export on a white background with dark text to avoid wasting ink when printing
-      const bgHex = '#ffffff';
-      const fgHex = '#0f172a';
-      const borderHex = '#e2e8f0';
-      const printPalette = lightColors;
-
-      const resolvePrintColor = (rawHex: string): string => {
-        const idxInDark = darkColors.findIndex(
-          (c) => c.toLowerCase() === rawHex.toLowerCase()
-        );
-        if (idxInDark >= 0 && printPalette[idxInDark]) {
-          return printPalette[idxInDark];
-        }
-        return rawHex;
-      };
-
-      tempWrapper = document.createElement('div');
-      tempWrapper.id = 'pdf-clean-export-root';
-      tempWrapper.style.cssText = [
-        `background-color: ${bgHex}`,
-        `color: ${fgHex}`,
-        'padding: 28px 32px',
-        'width: 740px',
-        'box-sizing: border-box',
-        "font-family: 'Plus Jakarta Sans', Arial, sans-serif",
-      ].join(';');
-
-      if (documentTitle.trim()) {
-        const titleEl = document.createElement('h1');
-        titleEl.textContent = documentTitle;
-        titleEl.style.cssText = [
-          `color: ${fgHex}`,
-          `border-bottom: 1px solid ${borderHex}`,
-          'padding-bottom: 12px',
-          'margin: 0 0 20px 0',
-          'font-size: 22px',
-          'font-weight: 700',
-        ].join(';');
-        tempWrapper.appendChild(titleEl);
-      }
-
-      const contentClone = document.createElement('div');
-      contentClone.style.cssText = [
-        `font-family: ${fontObj.cssFamily}`,
-        `font-size: ${fontSize}px`,
-        `line-height: ${lineHeight}`,
-        `letter-spacing: ${letterSpacing}em`,
-        `word-spacing: ${wordSpacing}em`,
-        `color: ${fgHex}`,
-        'white-space: pre-wrap',
-        'word-break: break-word',
-      ].join(';');
-
-      tokens.forEach((token) => {
-        if (token.type === 'newline') {
-          contentClone.appendChild(document.createElement('br'));
-          return;
-        }
-        if (token.type === 'separator') {
-          const sepSpan = document.createElement('span');
-          sepSpan.textContent = token.raw;
-          if (unitMode === 'sentence') {
-            sepSpan.style.color =
-              printPalette[token.defaultColorIndex % colorCount] || printPalette[0];
-          }
-          contentClone.appendChild(sepSpan);
-          return;
-        }
-
-        const wordSpan = document.createElement('span');
-        wordSpan.style.display = 'inline-block';
-
-        token.syllables.forEach((syl) => {
-          const defaultHex = printPalette[syl.defaultColorIndex % colorCount] || printPalette[0];
-          const hexColor = customSyllableColors[syl.id]
-            ? resolvePrintColor(customSyllableColors[syl.id])
-            : defaultHex;
-          const sylSpan = document.createElement('span');
-          sylSpan.textContent = syl.text;
-          sylSpan.style.color = hexColor;
-          if (showSyllableArcs) {
-            sylSpan.style.borderBottom = `2px solid ${hexColor}`;
-            sylSpan.style.paddingBottom = '2px';
-            sylSpan.style.marginRight = '1px';
-          }
-          wordSpan.appendChild(sylSpan);
-        });
-
-        contentClone.appendChild(wordSpan);
+      await exportReadingSheetToPdf({
+        documentTitle,
+        tokens,
+        fontFamily,
+        fontSize,
+        lineHeight,
+        letterSpacing,
+        wordSpacing,
+        unitMode,
+        paletteColors: lightColors, // High-contrast crisp printable palette
+        colorCount,
+        customSyllableColors,
+        showSyllableArcs,
+        showLineWordCount,
+        lineWordCountMode,
+        showSilentLetters,
+        silentLetterColor,
       });
-
-      tempWrapper.appendChild(contentClone);
-
-      if (typeof window.html2pdf === 'function') {
-        await window
-          .html2pdf()
-          .set({
-            margin: [12, 12, 12, 12],
-            filename: safeFilename,
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: {
-              scale: 2,
-              useCORS: true,
-              backgroundColor: '#ffffff',
-              onclone: (clonedDoc: Document) => {
-                clonedDoc.querySelectorAll('style').forEach((styleTag) => {
-                  if (
-                    styleTag.textContent &&
-                    (styleTag.textContent.includes('oklch') ||
-                      styleTag.textContent.includes('oklab') ||
-                      styleTag.textContent.includes('color-mix'))
-                  ) {
-                    styleTag.remove();
-                  }
-                });
-              },
-            },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-          })
-          .from(tempWrapper)
-          .save();
-      } else {
-        window.print();
-      }
     } catch (err) {
-      console.error('Erreur export PDF, bascule vers impression native:', err);
+      console.error('Erreur export PDF:', err);
+      // Fallback to native print if needed
       window.print();
     } finally {
-      if (tempWrapper && tempWrapper.parentNode) {
-        tempWrapper.parentNode.removeChild(tempWrapper);
-      }
       setIsExporting(false);
     }
   };
@@ -341,9 +221,7 @@ export default function App() {
           <Header
             theme={theme}
             onToggleTheme={handleToggleTheme}
-            onExportPdf={handleExportPdf}
             onResetAll={handleResetAll}
-            isExporting={isExporting}
             activeSection={activeSection}
             onSelectSection={setActiveSection}
             onBackToPortal={() => handleNavigate('accueil')}
@@ -529,6 +407,14 @@ export default function App() {
                 onSetShowSyllableArcs={setShowSyllableArcs}
                 customOverridesCount={Object.keys(customSyllableColors).length}
                 onClearCustomOverrides={() => setCustomSyllableColors({})}
+                showLineWordCount={showLineWordCount}
+                onSetShowLineWordCount={setShowLineWordCount}
+                lineWordCountMode={lineWordCountMode}
+                onSetLineWordCountMode={setLineWordCountMode}
+                showSilentLetters={showSilentLetters}
+                onSetShowSilentLetters={setShowSilentLetters}
+                silentLetterColor={silentLetterColor}
+                onSetSilentLetterColor={setSilentLetterColor}
               />
 
               <ReadingWorkspace
@@ -555,9 +441,27 @@ export default function App() {
                 onExportPdf={handleExportPdf}
                 isExporting={isExporting}
                 sheetRef={sheetRef}
+                showLineWordCount={showLineWordCount}
+                lineWordCountMode={lineWordCountMode}
+                showSilentLetters={showSilentLetters}
+                silentLetterColor={silentLetterColor}
               />
             </div>
           </main>
+        </div>
+      )}
+
+      {/* Visual Exporting Feedback Overlay */}
+      {isExporting && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="fixed inset-0 bg-black/60 z-[1000000] flex items-center justify-center p-4 backdrop-blur-xs select-none"
+        >
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-2xl flex items-center gap-4 text-slate-900 dark:text-slate-100 font-semibold text-sm">
+            <div className="w-5 h-5 border-3 border-sky-500 border-t-transparent rounded-full animate-spin" />
+            <span>Génération de la fiche de lecture en PDF...</span>
+          </div>
         </div>
       )}
     </div>

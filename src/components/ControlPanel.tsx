@@ -6,7 +6,7 @@ import {
   PalettePreset,
 } from '../utils/palettes';
 import { ColorUnitMode } from '../utils/syllabifier';
-import { Sun, Moon, Type, Palette, Sliders, Sparkles, RotateCcw, Layers } from 'lucide-react';
+import { Sun, Moon, Type, Palette, Sliders, Sparkles, RotateCcw, Layers, Hash, EyeOff } from 'lucide-react';
 
 interface ControlPanelProps {
   theme: 'light' | 'dark';
@@ -35,6 +35,14 @@ interface ControlPanelProps {
   onSetShowSyllableArcs: (val: boolean) => void;
   customOverridesCount: number;
   onClearCustomOverrides: () => void;
+  showLineWordCount: boolean;
+  onSetShowLineWordCount: (val: boolean) => void;
+  lineWordCountMode: 'cumulative' | 'line' | 'both';
+  onSetLineWordCountMode: (mode: 'cumulative' | 'line' | 'both') => void;
+  showSilentLetters: boolean;
+  onSetShowSilentLetters: (val: boolean) => void;
+  silentLetterColor: string;
+  onSetSilentLetterColor: (color: string) => void;
 }
 
 const UNIT_MODE_OPTIONS: { id: ColorUnitMode; label: string; desc: string }[] = [
@@ -70,6 +78,14 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
   onSetShowSyllableArcs,
   customOverridesCount,
   onClearCustomOverrides,
+  showLineWordCount,
+  onSetShowLineWordCount,
+  lineWordCountMode,
+  onSetLineWordCountMode,
+  showSilentLetters,
+  onSetShowSilentLetters,
+  silentLetterColor,
+  onSetSilentLetterColor,
 }) => {
   const isDark = theme === 'dark';
 
@@ -515,6 +531,192 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
             </span>
           </button>
         )}
+      </section>
+
+      <hr className={isDark ? 'border-slate-800' : 'border-slate-200'} />
+
+      {/* Section 5: Aides à la lecture (Fluence & Lettres muettes) */}
+      <section aria-labelledby="heading-aides" className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 id="heading-aides" className="text-sm font-semibold flex items-center gap-2">
+            <Hash className="w-4 h-4 text-sky-500" />
+            <span>5. Aides & Fluence de lecture</span>
+          </h2>
+          <span
+            className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+              isDark
+                ? 'bg-sky-950 text-sky-400 border border-sky-800'
+                : 'bg-sky-50 text-sky-700 border border-sky-200'
+            }`}
+          >
+            MCLM & Orthophonie
+          </span>
+        </div>
+
+        {/* Option 1: Nombre de mots par ligne */}
+        <div
+          className={`p-3 rounded-lg border space-y-2.5 transition-colors ${
+            isDark ? 'bg-slate-950/60 border-slate-800' : 'bg-slate-50 border-slate-200'
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            <label
+              htmlFor="toggle-line-word-count"
+              className="text-xs font-semibold cursor-pointer flex items-center gap-2"
+            >
+              <Hash className="w-3.5 h-3.5 text-sky-500" />
+              <span>Nombre de mots par ligne</span>
+            </label>
+            <input
+              id="toggle-line-word-count"
+              type="checkbox"
+              checked={showLineWordCount}
+              onChange={(e) => onSetShowLineWordCount(e.target.checked)}
+              className="w-4 h-4 accent-sky-600 rounded cursor-pointer"
+            />
+          </div>
+
+          <p className={`text-[11px] leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+            Affiche un badge repère en bout de ligne pour mesurer la vitesse de lecture (mots lus par minute).
+          </p>
+
+          {showLineWordCount && (
+            <div className="pt-1 space-y-1.5">
+              <span
+                className={`text-[10px] uppercase tracking-wider font-semibold block ${
+                  isDark ? 'text-slate-400' : 'text-slate-500'
+                }`}
+              >
+                Format du décompte :
+              </span>
+              <div
+                role="group"
+                aria-label="Format du compteur de mots par ligne"
+                className={`grid grid-cols-3 gap-1 p-1 rounded-lg border ${
+                  isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'
+                }`}
+              >
+                {(
+                  [
+                    { id: 'cumulative', label: 'Cumulé', sub: 'Fluence' },
+                    { id: 'line', label: 'Par ligne', sub: 'Ligne' },
+                    { id: 'both', label: 'Détaillé', sub: 'Les 2' },
+                  ] as { id: 'cumulative' | 'line' | 'both'; label: string; sub: string }[]
+                ).map((fmt) => (
+                  <button
+                    key={fmt.id}
+                    type="button"
+                    onClick={() => onSetLineWordCountMode(fmt.id)}
+                    aria-pressed={lineWordCountMode === fmt.id}
+                    className={`py-1 px-1.5 rounded-md text-[11px] font-semibold transition-colors flex flex-col items-center justify-center cursor-pointer ${
+                      lineWordCountMode === fmt.id
+                        ? isDark
+                          ? 'bg-sky-600 text-white shadow-xs'
+                          : 'bg-sky-100 text-sky-950 font-bold border border-sky-300'
+                        : isDark
+                        ? 'text-slate-400 hover:text-slate-200'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    <span>{fmt.label}</span>
+                    <span className="text-[9px] opacity-75">{fmt.sub}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Option 2: Lettres muettes */}
+        <div
+          className={`p-3 rounded-lg border space-y-2.5 transition-colors ${
+            isDark ? 'bg-slate-950/60 border-slate-800' : 'bg-slate-50 border-slate-200'
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            <label
+              htmlFor="toggle-silent-letters"
+              className="text-xs font-semibold cursor-pointer flex items-center gap-2"
+            >
+              <EyeOff className="w-3.5 h-3.5 text-amber-500" />
+              <span>Colorer les lettres muettes</span>
+            </label>
+            <input
+              id="toggle-silent-letters"
+              type="checkbox"
+              checked={showSilentLetters}
+              onChange={(e) => onSetShowSilentLetters(e.target.checked)}
+              className="w-4 h-4 accent-amber-500 rounded cursor-pointer"
+            />
+          </div>
+
+          <p className={`text-[11px] leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+            Distingue d'une couleur spécifique les lettres non prononcées (<span className="italic">e</span> muet, consonnes finales <span className="italic">s, t, d, p, x</span>, terminaisons <span className="italic">-ent</span>, <span className="italic">h</span> muet).
+          </p>
+
+          {showSilentLetters && (
+            <div className="pt-1 space-y-2">
+              <div className="flex items-center justify-between">
+                <span
+                  className={`text-[10px] uppercase tracking-wider font-semibold block ${
+                    isDark ? 'text-slate-400' : 'text-slate-500'
+                  }`}
+                >
+                  Couleur des lettres muettes :
+                </span>
+                <span
+                  style={{ color: silentLetterColor }}
+                  className="font-mono text-[11px] font-bold uppercase"
+                >
+                  {silentLetterColor}
+                </span>
+              </div>
+
+              {/* Swatches presets for silent letters */}
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {[
+                  { hex: '#94A3B8', name: 'Gris doux (estompé classique)' },
+                  { hex: '#64748B', name: 'Gris ardoise' },
+                  { hex: '#A855F7', name: 'Violet doux' },
+                  { hex: '#10B981', name: 'Vert sauge' },
+                  { hex: '#F43F5E', name: 'Rose doux' },
+                  { hex: '#F59E0B', name: 'Ambre' },
+                ].map((swatch, sIdx) => {
+                  const isCur = silentLetterColor.toLowerCase() === swatch.hex.toLowerCase();
+                  return (
+                    <button
+                      key={sIdx}
+                      type="button"
+                      onClick={() => onSetSilentLetterColor(swatch.hex)}
+                      title={swatch.name}
+                      aria-label={swatch.name}
+                      style={{ backgroundColor: swatch.hex }}
+                      className={`w-6 h-6 rounded-md border transition-transform hover:scale-110 cursor-pointer ${
+                        isCur
+                          ? 'ring-2 ring-amber-400 border-white scale-105'
+                          : 'border-black/20'
+                      }`}
+                    />
+                  );
+                })}
+
+                {/* Free color picker */}
+                <div className="flex items-center gap-1 ml-auto">
+                  <input
+                    type="color"
+                    aria-label="Couleur personnalisée des lettres muettes"
+                    value={silentLetterColor}
+                    onChange={(e) => onSetSilentLetterColor(e.target.value)}
+                    className="w-6 h-6 rounded cursor-pointer border-0 bg-transparent p-0"
+                  />
+                  <span className={`text-[10px] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                    Libre
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
       </section>
     </aside>
   );

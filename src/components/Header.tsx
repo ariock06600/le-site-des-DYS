@@ -1,12 +1,10 @@
 import React from 'react';
-import { Sun, Moon, FileDown, RotateCcw } from 'lucide-react';
+import { Sun, Moon, RotateCcw } from 'lucide-react';
 
 interface HeaderProps {
   theme: 'light' | 'dark';
   onToggleTheme: () => void;
-  onExportPdf: () => void;
   onResetAll: () => void;
-  isExporting: boolean;
   activeSection: 'atelier' | 'modeles' | 'guide';
   onSelectSection: (sec: 'atelier' | 'modeles' | 'guide') => void;
   onBackToPortal?: () => void;
@@ -15,9 +13,7 @@ interface HeaderProps {
 export const Header: React.FC<HeaderProps> = ({
   theme,
   onToggleTheme,
-  onExportPdf,
   onResetAll,
-  isExporting,
   activeSection,
   onSelectSection,
   onBackToPortal,
@@ -141,19 +137,6 @@ export const Header: React.FC<HeaderProps> = ({
           <span>Réinitialiser</span>
         </button>
       </nav>
-
-      {/* Zone 3: 1 Primary CTA button */}
-      <div className="flex items-center gap-3 shrink-0">
-        <button
-          type="button"
-          onClick={onExportPdf}
-          disabled={isExporting}
-          className="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold text-white bg-sky-600 hover:bg-sky-700 disabled:opacity-60 rounded-lg transition-colors whitespace-nowrap shrink-0 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
-        >
-          <FileDown className="w-4 h-4" />
-          <span>{isExporting ? 'Génération PDF...' : 'Exporter en PDF'}</span>
-        </button>
-      </div>
     </header>
   );
 };

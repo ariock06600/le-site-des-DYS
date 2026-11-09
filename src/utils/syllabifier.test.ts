@@ -4,6 +4,7 @@ import {
   splitFrenchWordIntoSyllables,
   tokenizeAndSyllabifyText,
   computeReadingStats,
+  groupTokensIntoLines,
 } from './syllabifier.ts';
 
 test('French syllabifier splits basic V-CV words accurately', () => {
@@ -58,4 +59,44 @@ test('tokenizeAndSyllabifyText supports syllable, word, and sentence modes', () 
   assert.equal(sentenceWords[1].syllables[0].defaultColorIndex, 0);
   assert.equal(sentenceWords[2].syllables[0].defaultColorIndex, 1);
   assert.equal(sentenceWords[3].syllables[0].defaultColorIndex, 1);
+});
+
+test('groupTokensIntoLines counts words per line and cumulative counts correctly', () => {
+  const text = 'Le petit chat dort.\nIl rêve de souris.\nAu réveil il saute.';
+  const tokens = tokenizeAndSyllabifyText(text, 2, false, 'syllable');
+  const lines = groupTokensIntoLines(tokens);
+
+  assert.equal(lines.length, 3);
+  assert.equal(lines[0].wordCount, 4); // Le petit chat dort
+  assert.equal(lines[0].cumulativeWordCount, 4);
+
+  assert.equal(lines[1].wordCount, 4); // Il rêve de souris
+  assert.equal(lines[1].cumulativeWordCount, 8);
+
+  assert.equal(lines[2].wordCount, 4); // Au réveil il saute
+  assert.equal(lines[2].cumulativeWordCount, 12);
+});
+
+test('silent letters are detected in syllables', () => {
+  const tokens = tokenizeAndSyllabifyText('petit renard volent', 2, false, 'syllable');
+  const petit = tokens[0].syllables; // pe - tit
+  // 't' at the end of petit is silent
+  const lastSylPetit = petit[petit.length - 1];
+  const silentPartPetit = lastSylPetit.parts.find((p) => p.isSilent);
+  assert.ok(silentPartPetit);
+  assert.equal(silentPartPetit.text, 't');
+
+  // 'd' at the end of renard is silent
+  const renard = tokens[2].syllables; // re - nard
+  const lastSylRenard = renard[renard.length - 1];
+  const silentPartRenard = lastSylRenard.parts.find((p) => p.isSilent);
+  assert.ok(silentPartRenard);
+  assert.equal(silentPartRenard.text, 'd');
+
+  // 3rd person plural verb ending '-ent' in volent is silent
+  const volent = tokens[4].syllables; // vo - lent
+  const lastSylVolent = volent[volent.length - 1];
+  const silentPartVolent = lastSylVolent.parts.find((p) => p.isSilent);
+  assert.ok(silentPartVolent);
+  assert.equal(silentPartVolent.text, 'ent');
 });

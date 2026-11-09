@@ -1,3 +1,11 @@
+import {
+  identifySilentLetterIndices,
+  buildSyllableCharParts,
+  CharPart,
+} from './silentLetters';
+
+export type { CharPart };
+
 export type ColorUnitMode = 'syllable' | 'word' | 'sentence';
 
 export interface SyllableSegment {
@@ -6,6 +14,15 @@ export interface SyllableSegment {
   defaultColorIndex: number;
   wordIndex: number;
   sentenceIndex: number;
+  parts: CharPart[];
+}
+
+export interface TextLine {
+  id: string;
+  lineNumber: number;
+  tokens: TokenNode[];
+  wordCount: number;
+  cumulativeWordCount: number;
 }
 
 export interface TokenNode {
@@ -218,7 +235,9 @@ export function tokenizeAndSyllabifyText(
       const currentSentenceIndex = sentenceCounter;
 
       const syllableStrings = splitFrenchWordIntoSyllables(wordMatch);
+      const silentFlags = identifySilentLetterIndices(wordMatch);
       let wordSyllableCounter = 0;
+      let charOffsetInWord = 0;
 
       const computeColorIndex = (sylCounterInWord: number, globalSylCounter: number): number => {
         if (unitMode === 'word') {
@@ -236,12 +255,15 @@ export function tokenizeAndSyllabifyText(
         const colorIdx = computeColorIndex(wordSyllableCounter, globalSyllableCounter);
         wordSyllableCounter++;
         globalSyllableCounter++;
+        const parts = buildSyllableCharParts(sylText, charOffsetInWord, silentFlags);
+        charOffsetInWord += sylText.length;
         return {
           id: `${nodeId}-syl-${sIdx}`,
           text: sylText,
           defaultColorIndex: colorIdx,
           wordIndex: currentWordIndex,
           sentenceIndex: currentSentenceIndex,
+          parts,
         };
       });
 
@@ -309,4 +331,51 @@ export function computeReadingStats(tokens: TokenNode[]): {
   }
 
   return { wordCount, syllableCount, characterCount };
+}
+
+/**
+ * Groups tokens into lines based on newline tokens.
+ * Computes word counts per line and cumulative word counts (standard French reading fluence / MCLM).
+ */
+export function groupTokensIntoLines(tokens: TokenNode[]): TextLine[] {
+  const lines: TextLine[] = [];
+  let currentTokens: TokenNode[] = [];
+  let currentWordCount = 0;
+  let cumulativeCount = 0;
+  let lineIdx = 0;
+
+  for (const token of tokens) {
+    if (token.type === 'newline') {
+      cumulativeCount += currentWordCount;
+      lines.push({
+        id: `line-${lineIdx}`,
+        lineNumber: lineIdx + 1,
+        tokens: currentTokens,
+        wordCount: currentWordCount,
+        cumulativeWordCount: cumulativeCount,
+      });
+      lineIdx++;
+      currentTokens = [];
+      currentWordCount = 0;
+    } else {
+      currentTokens.push(token);
+      if (token.type === 'word') {
+        currentWordCount++;
+      }
+    }
+  }
+
+  // Final line if there are remaining tokens or if tokens was empty
+  if (currentTokens.length > 0 || lines.length === 0) {
+    cumulativeCount += currentWordCount;
+    lines.push({
+      id: `line-${lineIdx}`,
+      lineNumber: lineIdx + 1,
+      tokens: currentTokens,
+      wordCount: currentWordCount,
+      cumulativeWordCount: cumulativeCount,
+    });
+  }
+
+  return lines;
 }
