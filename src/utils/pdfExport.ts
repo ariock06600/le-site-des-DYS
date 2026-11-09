@@ -58,12 +58,17 @@ export async function exportReadingSheetToPdf(options: PdfExportOptions): Promis
   const marginRight = 110;
   const marginTop = 120;
   const marginBottom = 120;
-  const gutterWidth = options.showLineWordCount ? 130 : 0;
+  const gutterWidth = options.showLineWordCount ? 140 : 0;
   const usableTextWidth = canvasWidth - marginLeft - marginRight - gutterWidth;
 
-  const canvasFontSize = Math.round(Math.max(20, Math.min(48, options.fontSize * 1.65)));
-  const lineHeightPx = Math.round(canvasFontSize * Math.max(1.5, options.lineHeight));
-  const wordSpacePx = Math.round(canvasFontSize * Math.max(0.2, options.wordSpacing) * 1.4);
+  // Proportional scale factor between CSS pixel size on screen and A4 print canvas (1600px width)
+  // options.fontSize range is 16px to 44px (default 24px).
+  // Dynamically scales: 16px -> 30px, 24px -> 45px, 32px -> 60px, 44px -> 82px
+  const canvasScale = 1.86;
+  const canvasFontSize = Math.round(options.fontSize * canvasScale);
+
+  // Line height is directly proportional to font size and options.lineHeight (1.4x to 3.2x)
+  const lineHeightPx = Math.round(canvasFontSize * options.lineHeight);
 
   // Setup helper canvas for font measurement
   const measureCanvas = document.createElement('canvas');
@@ -76,7 +81,17 @@ export async function exportReadingSheetToPdf(options: PdfExportOptions): Promis
   const textFont = `${canvasFontSize}px ${cssFontFamily}`;
   mctx.font = textFont;
 
-  // Group tokens into visual wrapped lines using text measurement
+  // Apply letter-spacing and word-spacing to canvas context when supported
+  const letterSpacingPx = `${(options.letterSpacing * canvasFontSize).toFixed(1)}px`;
+  const wordSpacingPx = `${(options.wordSpacing * canvasFontSize).toFixed(1)}px`;
+  if ('letterSpacing' in mctx) {
+    (mctx as unknown as { letterSpacing: string }).letterSpacing = letterSpacingPx;
+  }
+  if ('wordSpacing' in mctx) {
+    (mctx as unknown as { wordSpacing: string }).wordSpacing = wordSpacingPx;
+  }
+
+  // Group tokens into visual wrapped lines using accurate text measurement
   const lines: PageLine[] = [];
   let currentLineTokens: TokenNode[] = [];
   let currentLineWidth = 0;
@@ -120,14 +135,13 @@ export async function exportReadingSheetToPdf(options: PdfExportOptions): Promis
     }
 
     const tWidth = measureTokenWidth(token);
-    const addedWidth = token.type === 'word' ? tWidth + wordSpacePx : tWidth;
 
     if (currentLineWidth + tWidth > usableTextWidth && currentLineTokens.length > 0) {
       pushCurrentLine();
     }
 
     currentLineTokens.push(token);
-    currentLineWidth += addedWidth;
+    currentLineWidth += tWidth;
     if (token.type === 'word') {
       currentLineWords++;
     }
@@ -137,7 +151,7 @@ export async function exportReadingSheetToPdf(options: PdfExportOptions): Promis
     pushCurrentLine();
   }
 
-  // Calculate lines per page
+  // Calculate lines per page based on current font size and line height
   const headerHeight = options.documentTitle.trim() ? 140 : 40;
   const usablePageContentHeight = pageHeight - marginTop - marginBottom - headerHeight;
   const linesPerPage = Math.max(1, Math.floor(usablePageContentHeight / lineHeightPx));
@@ -202,6 +216,12 @@ export async function exportReadingSheetToPdf(options: PdfExportOptions): Promis
       let currentX = marginLeft;
       ctx.font = textFont;
       ctx.textBaseline = 'alphabetic';
+      if ('letterSpacing' in ctx) {
+        (ctx as unknown as { letterSpacing: string }).letterSpacing = letterSpacingPx;
+      }
+      if ('wordSpacing' in ctx) {
+        (ctx as unknown as { wordSpacing: string }).wordSpacing = wordSpacingPx;
+      }
 
       for (const token of line.tokens) {
         if (token.type === 'newline') continue;
@@ -244,18 +264,20 @@ export async function exportReadingSheetToPdf(options: PdfExportOptions): Promis
           // Draw syllable arc under syllable if enabled
           if (options.showSyllableArcs) {
             const arcWidth = sylEndX - sylStartX;
-            const arcY = currentY + 8;
+            const arcY = currentY + Math.max(5, Math.round(canvasFontSize * 0.15));
             ctx.strokeStyle = hexColor;
-            ctx.lineWidth = 2.5;
+            ctx.lineWidth = Math.max(2, Math.round(canvasFontSize * 0.055));
             ctx.beginPath();
             ctx.moveTo(sylStartX + 2, arcY);
-            ctx.quadraticCurveTo(sylStartX + arcWidth / 2, arcY + 8, sylEndX - 2, arcY);
+            ctx.quadraticCurveTo(
+              sylStartX + arcWidth / 2,
+              arcY + Math.max(6, Math.round(canvasFontSize * 0.15)),
+              sylEndX - 2,
+              arcY
+            );
             ctx.stroke();
           }
         }
-
-        // Add word spacing
-        currentX += wordSpacePx;
       }
 
       // Draw line word count badge in the right gutter
@@ -267,13 +289,21 @@ export async function exportReadingSheetToPdf(options: PdfExportOptions): Promis
             ? `${line.cumulativeWordCount}`
             : `${line.wordCount} · ${line.cumulativeWordCount}`;
 
-        ctx.font = 'bold 20px monospace';
+        const badgeFontSize = Math.max(16, Math.round(canvasFontSize * 0.42));
+        ctx.font = `bold ${badgeFontSize}px monospace`;
+        if ('letterSpacing' in ctx) {
+          (ctx as unknown as { letterSpacing: string }).letterSpacing = '0px';
+        }
+        if ('wordSpacing' in ctx) {
+          (ctx as unknown as { wordSpacing: string }).wordSpacing = '0px';
+        }
+
         const badgeMetrics = ctx.measureText(badgeText);
-        const badgePaddingX = 14;
-        const badgeWidth = Math.max(50, badgeMetrics.width + badgePaddingX * 2);
-        const badgeHeight = 32;
+        const badgePaddingX = Math.round(badgeFontSize * 0.7);
+        const badgeWidth = Math.max(48, Math.round(badgeMetrics.width + badgePaddingX * 2));
+        const badgeHeight = Math.max(28, Math.round(canvasFontSize * 0.68));
         const badgeX = canvasWidth - marginRight - badgeWidth;
-        const badgeY = currentY - canvasFontSize + (lineHeightPx - badgeHeight) / 2 - 8;
+        const badgeY = Math.round(currentY - canvasFontSize * 0.82 + (lineHeightPx - badgeHeight) / 2);
 
         // Rounded badge background
         const radius = 6;
@@ -305,6 +335,15 @@ export async function exportReadingSheetToPdf(options: PdfExportOptions): Promis
         ctx.textBaseline = 'middle';
         ctx.fillText(badgeText, badgeX + badgeWidth / 2, badgeY + badgeHeight / 2);
         ctx.textAlign = 'left';
+
+        // Restore body text font and spacing for next elements
+        ctx.font = textFont;
+        if ('letterSpacing' in ctx) {
+          (ctx as unknown as { letterSpacing: string }).letterSpacing = letterSpacingPx;
+        }
+        if ('wordSpacing' in ctx) {
+          (ctx as unknown as { wordSpacing: string }).wordSpacing = wordSpacingPx;
+        }
       }
 
       currentY += lineHeightPx;
